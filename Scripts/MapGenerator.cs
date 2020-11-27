@@ -9,6 +9,8 @@ public class MapGenerator : MonoBehaviour
   public Tile tilePrefab;
   public GameObject startingPipe;
   public Transform startingPipesParent;
+  public int seed = 2;
+  public bool shouldGenerateRandomSeed = false;
   private int tileGap = 2;
   private Vector3 startingTileOffset;
 
@@ -18,6 +20,10 @@ public class MapGenerator : MonoBehaviour
   public void Initialize()
   {
     random = new System.Random();
+    if (shouldGenerateRandomSeed)
+    {
+      seed = random.Next(0, 1000);
+    }
     tiles = new Tile[mapSize.x, mapSize.y];
   }
 
@@ -91,11 +97,12 @@ public class MapGenerator : MonoBehaviour
 
   private Tile[,] createTiles()
   {
+    generateFishersRandomArray(seed);
     for (int x = 0; x < mapSize.x; x++)
     {
       for (int y = 0; y < mapSize.y; y++)
       {
-        PlayerSymbol type = GetRandomTileType();
+        PlayerSymbol type = playerSymbolsGeneratedBlockets[x, y];//GetRandomTileType();
         Tile tempTile = Instantiate(tilePrefab, new Vector3(x * 2, 0f, y * 2), Quaternion.identity);
         //tempTile.transform.parent = this.transform;
         tempTile.setInitialData(type, new Vector2Int(x, y));
@@ -113,5 +120,21 @@ public class MapGenerator : MonoBehaviour
     }
     else
       return PlayerSymbol.Walkable;
+  }
+  PlayerSymbol[,] playerSymbolsGeneratedBlockets;
+
+  private void generateFishersRandomArray(int seed)
+  {
+    int[] playerSymbolsBlockers = new int[mapSize.x];
+    for (int k = 0; k < mapSize.x; k++)
+    {
+      playerSymbolsBlockers[k] = k;
+    }
+    playerSymbolsBlockers = RanNum.RanNumGenerator(playerSymbolsBlockers, seed);
+    playerSymbolsGeneratedBlockets = new PlayerSymbol[mapSize.x, mapSize.y];
+    for (int i = 0; i < mapSize.x; i++)
+    {
+      playerSymbolsGeneratedBlockets[i, playerSymbolsBlockers[i]] = PlayerSymbol.Blocker;
+    }
   }
 }
