@@ -9,19 +9,19 @@ public class MoveCamera : MonoBehaviour
   {
     if (Input.GetKeyDown(KeyCode.UpArrow))
     {
-      this.transform.position += Vector3.up;
+      this.transform.position += Vector3.down;
     }
     else if (Input.GetKeyDown(KeyCode.DownArrow))
     {
-      this.transform.position += Vector3.down;
+      this.transform.position += Vector3.up;
     }
     else if (Input.GetKeyDown(KeyCode.LeftArrow))
     {
-      this.transform.position += Vector3.left;
+      this.transform.position += Vector3.right;
     }
     else if (Input.GetKeyDown(KeyCode.RightArrow))
     {
-      this.transform.position += Vector3.right;
+      this.transform.position += Vector3.left;
     }
   }
 }

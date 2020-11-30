@@ -22,8 +22,9 @@ public class PowerToggleWidget : MonoBehaviour
       case PowerType.None:
         break;
       case PowerType.Plus1:
-        toggleBackGround.sprite = ExtraMoveImage;
-        toggleTarget.sprite = ExtraMoveImage;
+        //toggleBackGround.sprite = ExtraMoveImage;
+        //toggleTarget.sprite = ExtraMoveImage;
+        toggle.interactable = true;
         togglePowerCount.text = powerCount.ToString();
         break;
       //case PowerType.Plus2:
@@ -33,8 +34,9 @@ public class PowerToggleWidget : MonoBehaviour
       //  this.powerType = powerType;
       //  break;
       case PowerType.Spawner:
-        toggleBackGround.sprite = Robo;
-        toggleTarget.sprite = Robo;
+        //toggleBackGround.sprite = Robo;
+        //toggleTarget.sprite = Robo;
+        toggle.interactable = true;
         togglePowerCount.text = powerCount.ToString();
         break;
     }
@@ -48,7 +50,7 @@ public class PowerToggleWidget : MonoBehaviour
     toggle.isOn = false;
     if (powerCount <= 0)
     {
-      toggle.gameObject.SetActive(false);
+      toggle.interactable = false;
     }
   }
 }

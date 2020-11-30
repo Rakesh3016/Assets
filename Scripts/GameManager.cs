@@ -210,6 +210,8 @@ public class GameManager : MonoBehaviour
             {
               noOfPipeGeneratorsLeftForPlayer1++;
             }
+            Utils.EventAsync(new Events.UserAquiredPower(turn, tiles[NextTilePosition.x, NextTilePosition.y].powerType, player1AquiredPowersAndCount[tiles[NextTilePosition.x, NextTilePosition.y].powerType]));
+
             tiles[NextTilePosition.x, NextTilePosition.y].setPlayer1Data();
           }
           else
@@ -226,9 +228,10 @@ public class GameManager : MonoBehaviour
             {
               noOfPipeGeneratorsLeftForPlayer2++;
             }
+            Utils.EventAsync(new Events.UserAquiredPower(turn, tiles[NextTilePosition.x, NextTilePosition.y].powerType, player2AquiredPowersAndCount[tiles[NextTilePosition.x, NextTilePosition.y].powerType]));
+
             tiles[NextTilePosition.x, NextTilePosition.y].setPlayer2Data();
           }
-          Utils.EventAsync(new Events.UserAquiredPower(turn, tiles[NextTilePosition.x, NextTilePosition.y].powerType, player1AquiredPowersAndCount[tiles[NextTilePosition.x, NextTilePosition.y].powerType]));
           tiles[NextTilePosition.x, NextTilePosition.y].powerType = PowerType.None;
           setPlayersCommonFunctionality(currentPosition, NextTilePosition, turn);
         }

@@ -82,7 +82,8 @@ public class Tile : MonoBehaviour
 
   private PowerType GetRandomPower()
   {
-    int randomNumber = Virus.Utils.GetRandomNumber(0, Enum.GetValues(typeof(PowerType)).Length);
+    int randomNumber = Virus.Utils.GetRandomNumber(1, Enum.GetValues(typeof(PowerType)).Length);
+    Debug.Log("rand 1,3 " + randomNumber);
     return (PowerType)randomNumber;
   }
 
