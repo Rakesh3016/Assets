@@ -1,9 +1,10 @@
-﻿using System;
+﻿using Events;
+using System;
 using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
 
-public class MapGenerator : MonoBehaviour
+public class MapGeneratorController : AbstractController
 {
   public Vector2Int mapSize;
   public Tile tilePrefab;
@@ -17,7 +18,7 @@ public class MapGenerator : MonoBehaviour
   private Tile[,] tiles;
   private System.Random random;
 
-  public void Initialize()
+  public override void Initialize()
   {
     random = new System.Random();
     if (shouldGenerateRandomSeed)
@@ -27,10 +28,31 @@ public class MapGenerator : MonoBehaviour
     tiles = new Tile[mapSize.x, mapSize.y];
   }
 
-  public Tile[,] GenerateMap()
+  public override void RegisterEvents()
+  {
+    EventManager.Instance.AddListener<GenerateMapEvent>(onGetGenerateMapEvent);
+    EventManager.Instance.AddListener<GetMapSize>(onGetMapSize);
+  }
+  public override void UnRegisterEvents()
+  {
+    EventManager.Instance.RemoveListener<GenerateMapEvent>(onGetGenerateMapEvent);
+    EventManager.Instance.RemoveListener<GetMapSize>(onGetMapSize);
+  }
+
+  private void onGetMapSize(GetMapSize e)
+  {
+    e.getMapSize(mapSize);
+  }
+
+  //public Tile[,] GenerateMap()
+  //{
+
+  //}
+
+  private void onGetGenerateMapEvent(GenerateMapEvent e)
   {
     GenerateStartingPipes();
-    return createTiles();
+    e.generatedTiles(createTiles());
   }
 
   private void GenerateStartingPipes()
@@ -130,11 +152,13 @@ public class MapGenerator : MonoBehaviour
     {
       playerSymbolsBlockers[k] = k;
     }
-    playerSymbolsBlockers = RanNum.RanNumGenerator(playerSymbolsBlockers, seed);
+    playerSymbolsBlockers = RanNum.RanNumGenerator(playerSymbolsBlockers, seed, mapSize.x);
     playerSymbolsGeneratedBlockets = new PlayerSymbol[mapSize.x, mapSize.y];
     for (int i = 0; i < mapSize.x; i++)
     {
       playerSymbolsGeneratedBlockets[i, playerSymbolsBlockers[i]] = PlayerSymbol.Blocker;
     }
   }
+
+
 }

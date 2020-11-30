@@ -4,10 +4,9 @@ using System.Collections.Generic;
 
 public static class RanNum
 {
-  public static T[] RanNumGenerator<T>(T[] array, int seed)
+  public static T[] RanNumGenerator<T>(T[] array, int seed, int mapsize)
   {
     System.Random prng = new System.Random(seed);
-    int mapsize = GameManager.Instance.getMapSize.x;
 
     for (int i = 0; i < mapsize; i++)
     {

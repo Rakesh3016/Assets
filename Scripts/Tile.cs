@@ -24,6 +24,8 @@ public class Tile : MonoBehaviour
 
   private Renderer renderer;
 
+  public PowerType powerType;
+
   public void Awake()
   {
     renderer = WalkerPrefab.transform.GetComponent<Renderer>();
@@ -78,6 +80,12 @@ public class Tile : MonoBehaviour
     activateValidPrefab(tileType);
   }
 
+  private PowerType GetRandomPower()
+  {
+    int randomNumber = Virus.Utils.GetRandomNumber(0, Enum.GetValues(typeof(PowerType)).Length);
+    return (PowerType)randomNumber;
+  }
+
   private void activateValidPrefab(PlayerSymbol tileType)
   {
     blockerPrefab.SetActive(false);
@@ -88,6 +96,7 @@ public class Tile : MonoBehaviour
     switch (tileType)
     {
       case PlayerSymbol.Blocker:
+        powerType = GetRandomPower();
         blockerPrefab.SetActive(true);
         break;
       case PlayerSymbol.P1:

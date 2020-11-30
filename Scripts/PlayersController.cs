@@ -1,8 +1,10 @@
-﻿using System.Collections;
+﻿using Events;
+using System;
+using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
 
-public class PlayersController : MonoBehaviour
+public class PlayersController : AbstractController
 {
   PlayerType turn;
   //public PlayerSymbol[,] MainAllTileArrays;
@@ -13,26 +15,65 @@ public class PlayersController : MonoBehaviour
   //Dictionary<GameObject, Vector2Int> player2ActiveGenerators;
   private float speed;
 
+  Dictionary<PowerType, bool> userSelectedPowers = new Dictionary<PowerType, bool>();
   //Vector2Int player1SelectedTile = new Vector2Int(-1, -1);
   //Vector2Int player2SelectedTile = new Vector2Int(-1, -1);
   // Start is called before the first frame update
-  public void Initialize()
+  public override void Initialize()
   {
     turn = PlayerType.P1;
+    ResetPowers();
     //player1ActiveGenerators = new Dictionary<GameObject, Vector2Int>();
     //player2ActiveGenerators = new Dictionary<GameObject, Vector2Int>();
-    mapSize = GameManager.Instance.getMapSize;
+  }
 
+  private void ResetPowers()
+  {
+    foreach (PowerType powerType in Enum.GetValues(typeof(PowerType)))
+    {
+      if (userSelectedPowers.ContainsKey(powerType))
+      {
+        userSelectedPowers[powerType] = false;
+      }
+      else
+        userSelectedPowers.Add(powerType, false);
+    }
+  }
+
+  public override void RegisterEvents()
+  {
+    EventManager.Instance.AddListener<UserSelectedPower>(onUserSelectedPower);
+  }
+
+  public override void UnRegisterEvents()
+  {
+    EventManager.Instance.RemoveListener<UserSelectedPower>(onUserSelectedPower);
+  }
+
+
+  private void onUserSelectedPower(UserSelectedPower e)
+  {
+    userSelectedPowers[e.powerType] = e.isUserSelectedPower;
   }
 
   private void SwapPlayerTurn()
   {
+    if (userSelectedPowers[PowerType.Plus1] == true)
+    {
+      userSelectedPowers[PowerType.Plus1] = false;
+      Utils.EventAsync(new Events.UserUsedSelectedPower(PowerType.Plus1, turn));
+      return;
+    }
     if (turn == PlayerType.P1)
     {
       turn = PlayerType.P2;
     }
     else
       turn = PlayerType.P1;
+
+    Utils.EventAsync(new PlayerTurnChanged(turn));
+
+    ResetPowers();
   }
 
   void Update()
@@ -40,6 +81,7 @@ public class PlayersController : MonoBehaviour
     if (Input.GetKeyDown(KeyCode.W))
     {
       GameManager.Instance.Swipe(SwipeDirection.Up, turn);
+
       SwapPlayerTurn();
     }
     else if (Input.GetKeyDown(KeyCode.S))
@@ -89,13 +131,12 @@ public class PlayersController : MonoBehaviour
           if (turn == PlayerType.P1 && GameManager.Instance.noOfPipeGeneratorsLeftForPlayer1 > 0)
           {
             GameManager.Instance.AddedNewPipeGenerator(hit.collider.transform, turn);
-            turn = PlayerType.P2;
+            SwapPlayerTurn();
           }
           else if (turn == PlayerType.P2 && GameManager.Instance.noOfPipeGeneratorsLeftForPlayer2 > 0)
           {
             GameManager.Instance.AddedNewPipeGenerator(hit.collider.transform, turn);
-            turn = PlayerType.P1;
-
+            SwapPlayerTurn();
           }
         }
       }

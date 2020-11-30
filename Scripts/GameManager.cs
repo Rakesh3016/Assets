@@ -1,15 +1,20 @@
-﻿using System;
+﻿using Events;
+using System;
 using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
 
 public class GameManager : MonoBehaviour
 {
-  public MapGenerator mapGenerator;
-  public PlayersController player;
+  public List<AbstractController> controllers;
+  //public MapGeneratorController mapGenerator;
+  //public PlayersController player;
   public Tile[,] tiles;
-  public int noOfPipeGeneratorsLeftForPlayer1 = 3;
-  public int noOfPipeGeneratorsLeftForPlayer2 = 3;
+
+  [HideInInspector]
+  public int noOfPipeGeneratorsLeftForPlayer1 = 1;
+  [HideInInspector]
+  public int noOfPipeGeneratorsLeftForPlayer2 = 1;
 
   public Vector2Int player1SelectedTile = new Vector2Int(-1, -1);
   public Vector2Int player2SelectedTile = new Vector2Int(-1, -1);
@@ -20,19 +25,24 @@ public class GameManager : MonoBehaviour
   Dictionary<GameObject, Vector2Int> player1ActiveGenerators;
   Dictionary<GameObject, Vector2Int> player2ActiveGenerators;
 
+  Dictionary<PowerType, int> player1AquiredPowersAndCount;
+  Dictionary<PowerType, int> player2AquiredPowersAndCount;
+
+  private Vector2Int mapSize;
+
   public static GameManager Instance
   {
     get;
     private set;
   }
 
-  public Vector2Int getMapSize
-  {
-    get
-    {
-      return mapGenerator.mapSize;
-    }
-  }
+  //public Vector2Int getMapSize
+  //{
+  //  get
+  //  {
+  //    return mapGenerator.mapSize;
+  //  }
+  //}
   private void Awake()
   {
     if (Instance == null)
@@ -47,9 +57,38 @@ public class GameManager : MonoBehaviour
     player1ActiveGenerators = new Dictionary<GameObject, Vector2Int>();
     player2ActiveGenerators = new Dictionary<GameObject, Vector2Int>();
 
-    mapGenerator.Initialize();
-    tiles = mapGenerator.GenerateMap();
-    player.Initialize();
+    player1AquiredPowersAndCount = new Dictionary<PowerType, int>();
+    player2AquiredPowersAndCount = new Dictionary<PowerType, int>();
+
+    foreach (IController controller in controllers)
+    {
+      controller.Initialize();
+      controller.RegisterEvents();
+    }
+    //mapGenerator.Initialize();
+    //tiles = mapGenerator.GenerateMap();
+    //player.Initialize();
+
+    Utils.EventAsync(new Events.GenerateMapEvent(onGetGeneratedTiles));
+    Utils.EventAsync(new Events.GetMapSize(onGetMapSize));
+
+    RegisterEvents();
+  }
+
+  private void RegisterEvents()
+  {
+
+  }
+
+
+  private void onGetMapSize(Vector2Int obj)
+  {
+    mapSize = obj;
+  }
+
+  private void onGetGeneratedTiles(Tile[,] obj)
+  {
+    tiles = obj;
   }
 
   public void SwipeOld(SwipeDirection swipeDirection, PlayerType turn)
@@ -62,10 +101,10 @@ public class GameManager : MonoBehaviour
     else
       currentPlayerSymbol = PlayerSymbol.P2;
 
-    Tile[,] previousStateTileArray = new Tile[mapGenerator.mapSize.x, mapGenerator.mapSize.y];
-    for (int x = 0; x < mapGenerator.mapSize.x; x++)
+    Tile[,] previousStateTileArray = new Tile[mapSize.x, mapSize.y];
+    for (int x = 0; x < mapSize.x; x++)
     {
-      for (int y = 0; y < mapGenerator.mapSize.y; y++)
+      for (int y = 0; y < mapSize.y; y++)
       {
         previousStateTileArray[x, y] = (Tile)tiles[x, y].Shallowcopy();
       }
@@ -75,9 +114,9 @@ public class GameManager : MonoBehaviour
     //Array.Copy(tiles, previousStateTileArray, tiles.Length);
     //Tile[,] previousStateTileArray = tiles.Clone() as Tile[,];
 
-    for (int x = 0; x < mapGenerator.mapSize.x; x++)
+    for (int x = 0; x < mapSize.x; x++)
     {
-      for (int y = 0; y < mapGenerator.mapSize.y; y++)
+      for (int y = 0; y < mapSize.y; y++)
       {
         if (previousStateTileArray[x, y].tileType == currentPlayerSymbol)
         {
@@ -155,10 +194,49 @@ public class GameManager : MonoBehaviour
             tiles[NextTilePosition.x, NextTilePosition.y].setPlayer2Data();
           }
         }
+        else if (tiles[NextTilePosition.x, NextTilePosition.y].tileType == PlayerSymbol.Blocker)
+        {
+          if (turn == PlayerType.P1)
+          {
+            if (player1AquiredPowersAndCount.ContainsKey(tiles[NextTilePosition.x, NextTilePosition.y].powerType))
+            {
+              player1AquiredPowersAndCount[tiles[NextTilePosition.x, NextTilePosition.y].powerType] = player1AquiredPowersAndCount[tiles[NextTilePosition.x, NextTilePosition.y].powerType] + 1;
+            }
+            else
+            {
+              player1AquiredPowersAndCount.Add(tiles[NextTilePosition.x, NextTilePosition.y].powerType, 1);
+            }
+            if (tiles[NextTilePosition.x, NextTilePosition.y].powerType == PowerType.Spawner)
+            {
+              noOfPipeGeneratorsLeftForPlayer1++;
+            }
+            tiles[NextTilePosition.x, NextTilePosition.y].setPlayer1Data();
+          }
+          else
+          {
+            if (player2AquiredPowersAndCount.ContainsKey(tiles[NextTilePosition.x, NextTilePosition.y].powerType))
+            {
+              player2AquiredPowersAndCount[tiles[NextTilePosition.x, NextTilePosition.y].powerType] = player2AquiredPowersAndCount[tiles[NextTilePosition.x, NextTilePosition.y].powerType] + 1;
+            }
+            else
+            {
+              player2AquiredPowersAndCount.Add(tiles[NextTilePosition.x, NextTilePosition.y].powerType, 1);
+            }
+            if (tiles[NextTilePosition.x, NextTilePosition.y].powerType == PowerType.Spawner)
+            {
+              noOfPipeGeneratorsLeftForPlayer2++;
+            }
+            tiles[NextTilePosition.x, NextTilePosition.y].setPlayer2Data();
+          }
+          Utils.EventAsync(new Events.UserAquiredPower(turn, tiles[NextTilePosition.x, NextTilePosition.y].powerType, player1AquiredPowersAndCount[tiles[NextTilePosition.x, NextTilePosition.y].powerType]));
+          tiles[NextTilePosition.x, NextTilePosition.y].powerType = PowerType.None;
+          setPlayersCommonFunctionality(currentPosition, NextTilePosition, turn);
+        }
         else if (tiles[NextTilePosition.x, NextTilePosition.y].tileType != currentPlayerSymbol)
         {
           DestroyIfTheTileHasOppositePlayer(turn, NextTilePosition);
-          tiles[NextTilePosition.x, NextTilePosition.y].setWalkableData();
+          //tiles[NextTilePosition.x, NextTilePosition.y].setWalkableData();
+          setPlayersCommonFunctionality(currentPosition, NextTilePosition, turn);
         }
         else if (tiles[NextTilePosition.x, NextTilePosition.y].tileType == currentPlayerSymbol)
         {
@@ -215,7 +293,7 @@ public class GameManager : MonoBehaviour
       }
       if (seletedPipesGenerator != null)
       {
-      player1ActiveGenerators.Remove(seletedPipesGenerator);
+        player1ActiveGenerators.Remove(seletedPipesGenerator);
         Destroy(seletedPipesGenerator);
       }
     }
@@ -305,13 +383,13 @@ public class GameManager : MonoBehaviour
           returnPosition = new Vector2Int(currentTilePosition.x, currentTilePosition.y - 1);
         break;
       case SwipeDirection.Down:
-        if (currentTilePosition.y == mapGenerator.mapSize.y - 1)
+        if (currentTilePosition.y == mapSize.y - 1)
           returnPosition = new Vector2Int(-1, -1);
         else
           returnPosition = new Vector2Int(currentTilePosition.x, currentTilePosition.y + 1);
         break;
       case SwipeDirection.Left:
-        if (currentTilePosition.x == mapGenerator.mapSize.x - 1)
+        if (currentTilePosition.x == mapSize.x - 1)
           returnPosition = new Vector2Int(-1, -1);
         else
           returnPosition = new Vector2Int(currentTilePosition.x + 1, currentTilePosition.y);

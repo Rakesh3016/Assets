@@ -21,3 +21,10 @@ public enum SwipeDirection
   Left,
   Right
 }
+
+public enum PowerType
+{
+  None,
+  Spawner,
+  Plus1,
+}
