@@ -47,6 +47,7 @@ public class PowerToggleWidget : MonoBehaviour
   public void UserUsedThePower()
   {
     powerCount--;
+    togglePowerCount.text = powerCount.ToString();
     toggle.isOn = false;
     if (powerCount <= 0)
     {
