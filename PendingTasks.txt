@@ -1,0 +1,11 @@
+Game Functionality:
+-Player Won conditions
+-Placing different Pipes instead of regular 4 way pipe
+-FTUE
+-General UI for >map Size selection, > Random Seed Selection.
+-May be a new power called shield where other player cannot destroy him for one move.
+
+Art Pending:
+-Starting pipes should be comming from ground.
+-Different Pipe textures for different Players.
+-Water fall from pipes.

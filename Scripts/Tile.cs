@@ -34,9 +34,9 @@ public class Tile : MonoBehaviour
   public void setPlayerIndicator(PlayerType turn)
   {
     if (turn == PlayerType.P1)
-      renderer.material = WalkableMaterialPlayer2;
-    else
       renderer.material = WalkableMaterialPlayer1;
+    else
+      renderer.material = WalkableMaterialPlayer2;
 
   }
 

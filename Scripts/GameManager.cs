@@ -77,6 +77,7 @@ public class GameManager : MonoBehaviour
 
   private void RegisterEvents()
   {
+    EventManager.Instance.AddListener<PlayerTurnChanged>(playerTurnChanged);
 
   }
 
@@ -248,18 +249,17 @@ public class GameManager : MonoBehaviour
       }
     }
 
-    playerTurnChanged(turn);
     //  }
     //}
   }
 
-  private void playerTurnChanged(PlayerType turn)
+  private void playerTurnChanged(PlayerTurnChanged playerTurnChanged)
   {
     foreach (Tile tempTile in tiles)
     {
       if (tempTile.tileType == PlayerSymbol.Walkable)
       {
-        tempTile.setPlayerIndicator(turn);
+        tempTile.setPlayerIndicator(playerTurnChanged.playerType);
       }
     }
   }
@@ -370,7 +370,7 @@ public class GameManager : MonoBehaviour
       player2SelectedTile = position;// hit.collider.transform.GetComponent<Tile>().position;
       tiles[position.x, position.y].setPlayer2Data();
     }
-    playerTurnChanged(playerType);
+    //playerTurnChanged(playerType);
 
   }
 
