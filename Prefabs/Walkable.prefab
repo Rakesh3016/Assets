@@ -11,7 +11,7 @@ GameObject:
   - component: {fileID: 4212552940789084395}
   - component: {fileID: 5129309892268362461}
   - component: {fileID: 1446342954246895140}
-  m_Layer: 0
+  m_Layer: 8
   m_Name: pipe_a_a_01 (4)
   m_TagString: Untagged
   m_Icon: {fileID: 0}
@@ -88,7 +88,7 @@ GameObject:
   - component: {fileID: 4212552940507072793}
   - component: {fileID: 5129309891449369391}
   - component: {fileID: 1446342953428013014}
-  m_Layer: 0
+  m_Layer: 8
   m_Name: pipe_a_a_01 (10)
   m_TagString: Untagged
   m_Icon: {fileID: 0}
@@ -165,7 +165,7 @@ GameObject:
   - component: {fileID: 2071175835522125546}
   - component: {fileID: 1325779635618888080}
   - component: {fileID: 797577982276953655}
-  m_Layer: 0
+  m_Layer: 8
   m_Name: small_box_cover
   m_TagString: Untagged
   m_Icon: {fileID: 0}
@@ -242,7 +242,7 @@ GameObject:
   - component: {fileID: 7277131003998518356}
   - component: {fileID: 2134683541434999649}
   - component: {fileID: 8894160929193744792}
-  m_Layer: 0
+  m_Layer: 8
   m_Name: pipe_a_a_01 (10)
   m_TagString: Untagged
   m_Icon: {fileID: 0}
@@ -319,7 +319,7 @@ GameObject:
   - component: {fileID: 1667729648179484997}
   - component: {fileID: 1300776815751617437}
   - component: {fileID: 8277055688972814180}
-  m_Layer: 0
+  m_Layer: 8
   m_Name: pipe_a_a_01 (4)
   m_TagString: Untagged
   m_Icon: {fileID: 0}
@@ -394,7 +394,7 @@ GameObject:
   serializedVersion: 6
   m_Component:
   - component: {fileID: 2452394596878545071}
-  m_Layer: 0
+  m_Layer: 8
   m_Name: FourWayPipeVertical
   m_TagString: Untagged
   m_Icon: {fileID: 0}
@@ -427,7 +427,7 @@ GameObject:
   - component: {fileID: 8275885472072649171}
   - component: {fileID: 5676705864768001736}
   - component: {fileID: 5329202131448858250}
-  m_Layer: 0
+  m_Layer: 8
   m_Name: smal_box
   m_TagString: Untagged
   m_Icon: {fileID: 0}
@@ -504,7 +504,7 @@ GameObject:
   - component: {fileID: 6698296781826515289}
   - component: {fileID: 9112298380695445308}
   - component: {fileID: 1078806842}
-  m_Layer: 0
+  m_Layer: 8
   m_Name: Walkable
   m_TagString: Walkable
   m_Icon: {fileID: 0}
@@ -554,6 +554,9 @@ MonoBehaviour:
   WalkableMaterialPlayer2: {fileID: 2100000, guid: 38555d809c1957f4da96366e8fb4b056,
     type: 2}
   containsPipeGenerator: 0
+  powerType: 0
+  isTilePlayer1EndGoal: 0
+  isTilePlayer2EndGoal: 0
 --- !u!65 &1078806842
 BoxCollider:
   m_ObjectHideFlags: 0
@@ -578,7 +581,7 @@ GameObject:
   - component: {fileID: 3377314204392352705}
   - component: {fileID: 3377314204392352718}
   - component: {fileID: 3377314204392352719}
-  m_Layer: 0
+  m_Layer: 8
   m_Name: Walker
   m_TagString: Untagged
   m_Icon: {fileID: 0}
@@ -654,7 +657,7 @@ GameObject:
   m_Component:
   - component: {fileID: 426598762809451651}
   - component: {fileID: 160758323293316491}
-  m_Layer: 0
+  m_Layer: 8
   m_Name: Spot Light
   m_TagString: Untagged
   m_Icon: {fileID: 0}
@@ -747,7 +750,7 @@ GameObject:
   - component: {fileID: 118506323288214607}
   - component: {fileID: 202037209167905465}
   - component: {fileID: 6554764826402571716}
-  m_Layer: 0
+  m_Layer: 8
   m_Name: Sphere
   m_TagString: Untagged
   m_Icon: {fileID: 0}
@@ -835,7 +838,7 @@ GameObject:
   serializedVersion: 6
   m_Component:
   - component: {fileID: 4989901966752042531}
-  m_Layer: 0
+  m_Layer: 8
   m_Name: FourWayPipeHorizontal
   m_TagString: Untagged
   m_Icon: {fileID: 0}
@@ -866,7 +869,7 @@ GameObject:
   serializedVersion: 6
   m_Component:
   - component: {fileID: 9209598092136414125}
-  m_Layer: 0
+  m_Layer: 8
   m_Name: Blocker
   m_TagString: Untagged
   m_Icon: {fileID: 0}
@@ -898,7 +901,7 @@ GameObject:
   serializedVersion: 6
   m_Component:
   - component: {fileID: 3500999903908499304}
-  m_Layer: 0
+  m_Layer: 8
   m_Name: FourWayPipeP2
   m_TagString: Untagged
   m_Icon: {fileID: 0}
@@ -930,7 +933,7 @@ GameObject:
   serializedVersion: 6
   m_Component:
   - component: {fileID: 2720795965751665848}
-  m_Layer: 0
+  m_Layer: 8
   m_Name: FourWayPipeVertical
   m_TagString: Untagged
   m_Icon: {fileID: 0}
@@ -961,7 +964,7 @@ GameObject:
   serializedVersion: 6
   m_Component:
   - component: {fileID: 8029439877816397898}
-  m_Layer: 0
+  m_Layer: 8
   m_Name: FourWayPipeP1
   m_TagString: Untagged
   m_Icon: {fileID: 0}
@@ -993,7 +996,7 @@ GameObject:
   serializedVersion: 6
   m_Component:
   - component: {fileID: 1773751196241699556}
-  m_Layer: 0
+  m_Layer: 8
   m_Name: FourWayPipeHorizontal
   m_TagString: Untagged
   m_Icon: {fileID: 0}

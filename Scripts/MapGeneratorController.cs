@@ -8,7 +8,8 @@ public class MapGeneratorController : AbstractController
 {
   public Vector2Int mapSize;
   public Tile tilePrefab;
-  public GameObject startingPipe;
+  public GameObject startingPipeP1;
+  public GameObject startingPipeP2;
   public Transform startingPipesParent;
   public int seed = 2;
   public bool shouldGenerateRandomSeed = false;
@@ -70,7 +71,16 @@ public class MapGeneratorController : AbstractController
       }
       else
       {
-        GameObject startingPipePrefab = Instantiate(startingPipe, new Vector3(0, 0, 0), Quaternion.identity);
+
+        GameObject startingPipePrefab;
+        if (tempRotateNumber == 1 || tempRotateNumber == 3)
+        {
+          startingPipePrefab = Instantiate(startingPipeP2, new Vector3(0, 0, 0), Quaternion.identity);
+        }
+        else
+        {
+          startingPipePrefab = Instantiate(startingPipeP1, new Vector3(0, 0, 0), Quaternion.identity);
+        }
         startingPipePrefab.transform.parent = startingPipesParent;
         int tempRotate2 = 0;
         for (int y = 0; y < tempRotateNumber; y++)
@@ -128,6 +138,14 @@ public class MapGeneratorController : AbstractController
         Tile tempTile = Instantiate(tilePrefab, new Vector3(x * 2, 0f, y * 2), Quaternion.identity);
         //tempTile.transform.parent = this.transform;
         tempTile.setInitialData(type, new Vector2Int(x, y));
+        if (x == 0)
+        {
+          tempTile.isTilePlayer2EndGoal = true;
+        }
+        if (y == 0)
+        {
+          tempTile.isTilePlayer1EndGoal = true;
+        }
         tiles[x, y] = tempTile;
       }
     }

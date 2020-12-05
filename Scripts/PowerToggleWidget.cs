@@ -39,6 +39,10 @@ public class PowerToggleWidget : MonoBehaviour
         toggle.interactable = true;
         togglePowerCount.text = powerCount.ToString();
         break;
+        //case PowerType.Shield:
+        //  toggle.interactable = true;
+        //  togglePowerCount.text = powerCount.ToString();
+        //  break;
     }
     this.powerCount = powerCount;
     this.powerType = powerType;

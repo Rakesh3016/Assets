@@ -15,6 +15,10 @@ public class UIController : AbstractController
   [SerializeField]
   PowerPrefabDictionary player1AquiredPowersAndCountSerilized;
 
+
+  public GameObject gameOver;
+  public Text playerWonText;
+
   public IDictionary<PowerType, PowerToggleWidget> Player1PowersAndCount
   {
     get { return player1AquiredPowersAndCountSerilized; }
@@ -57,6 +61,17 @@ public class UIController : AbstractController
     EventManager.Instance.AddListener<UserAquiredPower>(onUserGotNewPower);
     EventManager.Instance.AddListener<PlayerTurnChanged>(onPlayerTurnChanged);
     EventManager.Instance.AddListener<UserUsedSelectedPower>(onUserUsedSelectedPower);
+    EventManager.Instance.AddListener<GameOverEvent>(onGameOverEvent);
+
+  }
+
+  private void onGameOverEvent(GameOverEvent e)
+  {
+    gameOver.SetActive(true);
+    if (e.playerWon == PlayerType.P1)
+      playerWonText.text = "Player 1 Won";
+    else
+      playerWonText.text = "Player 2 Won";
 
   }
 

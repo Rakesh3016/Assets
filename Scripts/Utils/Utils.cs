@@ -19,10 +19,39 @@ namespace Virus
       }
     }
 
-    public static int GetRandomNumber(int min, int max)
+
+
+    public static Vector2Int GetNextTile(Vector2Int currentTilePosition, SwipeDirection direction, int mapSize)
     {
-      System.Random random = new System.Random();
-      return random.Next(min, max);
+      Vector2Int returnPosition = new Vector2Int(-1, -1);
+      switch (direction)
+      {
+        case SwipeDirection.Up:
+          if (currentTilePosition.y == 0)
+            returnPosition = new Vector2Int(-1, -1);
+          else
+            returnPosition = new Vector2Int(currentTilePosition.x, currentTilePosition.y - 1);
+          break;
+        case SwipeDirection.Down:
+          if (currentTilePosition.y == mapSize - 1)
+            returnPosition = new Vector2Int(-1, -1);
+          else
+            returnPosition = new Vector2Int(currentTilePosition.x, currentTilePosition.y + 1);
+          break;
+        case SwipeDirection.Left:
+          if (currentTilePosition.x == mapSize - 1)
+            returnPosition = new Vector2Int(-1, -1);
+          else
+            returnPosition = new Vector2Int(currentTilePosition.x + 1, currentTilePosition.y);
+          break;
+        case SwipeDirection.Right:
+          if (currentTilePosition.x == 0)
+            returnPosition = new Vector2Int(-1, -1);
+          else
+            returnPosition = new Vector2Int(currentTilePosition.x - 1, currentTilePosition.y);
+          break;
+      }
+      return returnPosition;
     }
   }
 }

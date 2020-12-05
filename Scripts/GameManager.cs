@@ -92,55 +92,38 @@ public class GameManager : MonoBehaviour
     tiles = obj;
   }
 
-  public void SwipeOld(SwipeDirection swipeDirection, PlayerType turn)
+  public void AddedNewPipeGenerator(Transform startingPipe, PlayerType playerType)
   {
-    Debug.Log("Button Down Pressed");
-
-    PlayerSymbol currentPlayerSymbol;
-    if (turn == PlayerType.P1)
-      currentPlayerSymbol = PlayerSymbol.P1;
-    else
-      currentPlayerSymbol = PlayerSymbol.P2;
-
-    Tile[,] previousStateTileArray = new Tile[mapSize.x, mapSize.y];
-    for (int x = 0; x < mapSize.x; x++)
+    StartingPipes startingPipes = startingPipe.GetComponent<StartingPipes>();
+    Vector2Int position = startingPipes.GetFrontTileIndex;
+    if (playerType == PlayerType.P1 && noOfPipeGeneratorsLeftForPlayer1 > 0)
     {
-      for (int y = 0; y < mapSize.y; y++)
-      {
-        previousStateTileArray[x, y] = (Tile)tiles[x, y].Shallowcopy();
-      }
-    }
-    //Tile[,] previousStateTileArray = Utils.DeepClone<Tile[,]>(tiles);
-    //Tile[,] previousStateTileArray = new Tile[mapGenerator.mapSize.x, mapGenerator.mapSize.y];
-    //Array.Copy(tiles, previousStateTileArray, tiles.Length);
-    //Tile[,] previousStateTileArray = tiles.Clone() as Tile[,];
+      GameObject player1Instance = Instantiate(player1Prefab, startingPipe.position, Quaternion.identity);
+      Player player = player1Instance.GetComponent<Player>();
+      player1ActiveGenerators.Add(player1Instance, position);
+      noOfPipeGeneratorsLeftForPlayer1--;
 
-    for (int x = 0; x < mapSize.x; x++)
-    {
-      for (int y = 0; y < mapSize.y; y++)
-      {
-        if (previousStateTileArray[x, y].tileType == currentPlayerSymbol)
-        {
-          Vector2Int NextTilePosition = GetNextTile(new Vector2Int(x, y), swipeDirection);
-          if (NextTilePosition.x != -1 || NextTilePosition.y != -1)
-          {
-            if (previousStateTileArray[NextTilePosition.x, NextTilePosition.y].tileType == PlayerSymbol.Walkable)
-            {
-              if (turn == PlayerType.P1)
-                tiles[NextTilePosition.x, NextTilePosition.y].setPlayer1Data();
-              else
-                tiles[NextTilePosition.x, NextTilePosition.y].setPlayer2Data();
-            }
-            else if (previousStateTileArray[NextTilePosition.x, NextTilePosition.y].tileType != currentPlayerSymbol)
-            {
-              tiles[NextTilePosition.x, NextTilePosition.y].setWalkableData();
-            }
-          }
-        }
-      }
+      NextTileOperations(playerType, PlayerSymbol.P1, position, position);
+
+      //player.MoveTowards(new Vector3(tiles[position.x, position.y].transform.position.x, player.transform.position.y, tiles[position.x, position.y].transform.position.z));
+      //player1SelectedTile = position;// hit.collider.transform.GetComponent<Tile>().position;
+      //tiles[position.x, position.y].setPlayer1Data();
     }
+    else if (playerType == PlayerType.P2 && noOfPipeGeneratorsLeftForPlayer2 > 0)
+    {
+      GameObject player2Instance = Instantiate(player2Prefab, startingPipe.position, Quaternion.identity);
+      Player player = player2Instance.GetComponent<Player>();
+      player2ActiveGenerators.Add(player2Instance, position);
+      noOfPipeGeneratorsLeftForPlayer2--;
+
+      NextTileOperations(playerType, PlayerSymbol.P2, position, position);
+      //player.MoveTowards(new Vector3(tiles[position.x, position.y].transform.position.x, player.transform.position.y, tiles[position.x, position.y].transform.position.z));
+      //player2SelectedTile = position;// hit.collider.transform.GetComponent<Tile>().position;
+      //tiles[position.x, position.y].setPlayer2Data();
+    }
+    //playerTurnChanged(playerType);
+
   }
-
   public void Swipe(SwipeDirection swipeDirection, PlayerType turn)
   {
     Debug.Log("Button Down Pressed");
@@ -176,81 +159,103 @@ public class GameManager : MonoBehaviour
     //  {
     if (tiles[currentPosition.x, currentPosition.y].tileType == currentPlayerSymbol)
     {
-      Vector2Int NextTilePosition = GetNextTile(new Vector2Int(currentPosition.x, currentPosition.y), swipeDirection);
-      tiles[currentPosition.x, currentPosition.y].containsPipeGenerator = false;
+      Vector2Int NextTilePosition = Virus.Utils.GetNextTile(new Vector2Int(currentPosition.x, currentPosition.y), swipeDirection, mapSize.x);
 
       if (NextTilePosition.x != -1 || NextTilePosition.y != -1)
       {
-        if (tiles[NextTilePosition.x, NextTilePosition.y].tileType == PlayerSymbol.Walkable)
-        {
-          if (turn == PlayerType.P1)
-          {
-            setPlayersCommonFunctionality(currentPosition, NextTilePosition, turn);
-            tiles[NextTilePosition.x, NextTilePosition.y].setPlayer1Data();
-          }
-          else
-          {
-            setPlayersCommonFunctionality(currentPosition, NextTilePosition, turn);
+        tiles[currentPosition.x, currentPosition.y].containsPipeGenerator = false;
+        NextTileOperations(turn, currentPlayerSymbol, currentPosition, NextTilePosition);
 
-            tiles[NextTilePosition.x, NextTilePosition.y].setPlayer2Data();
-          }
-        }
-        else if (tiles[NextTilePosition.x, NextTilePosition.y].tileType == PlayerSymbol.Blocker)
+        //Check For Game End Condition
+        if (GameOverCheck.CheckGameOverConditions(tiles, turn, mapSize.x))
         {
-          if (turn == PlayerType.P1)
-          {
-            if (player1AquiredPowersAndCount.ContainsKey(tiles[NextTilePosition.x, NextTilePosition.y].powerType))
-            {
-              player1AquiredPowersAndCount[tiles[NextTilePosition.x, NextTilePosition.y].powerType] = player1AquiredPowersAndCount[tiles[NextTilePosition.x, NextTilePosition.y].powerType] + 1;
-            }
-            else
-            {
-              player1AquiredPowersAndCount.Add(tiles[NextTilePosition.x, NextTilePosition.y].powerType, 1);
-            }
-            if (tiles[NextTilePosition.x, NextTilePosition.y].powerType == PowerType.Spawner)
-            {
-              noOfPipeGeneratorsLeftForPlayer1++;
-            }
-            Utils.EventAsync(new Events.UserAquiredPower(turn, tiles[NextTilePosition.x, NextTilePosition.y].powerType, player1AquiredPowersAndCount[tiles[NextTilePosition.x, NextTilePosition.y].powerType]));
+          Utils.EventAsync(new Events.GameOverEvent(turn));
 
-            tiles[NextTilePosition.x, NextTilePosition.y].setPlayer1Data();
-          }
-          else
-          {
-            if (player2AquiredPowersAndCount.ContainsKey(tiles[NextTilePosition.x, NextTilePosition.y].powerType))
-            {
-              player2AquiredPowersAndCount[tiles[NextTilePosition.x, NextTilePosition.y].powerType] = player2AquiredPowersAndCount[tiles[NextTilePosition.x, NextTilePosition.y].powerType] + 1;
-            }
-            else
-            {
-              player2AquiredPowersAndCount.Add(tiles[NextTilePosition.x, NextTilePosition.y].powerType, 1);
-            }
-            if (tiles[NextTilePosition.x, NextTilePosition.y].powerType == PowerType.Spawner)
-            {
-              noOfPipeGeneratorsLeftForPlayer2++;
-            }
-            Utils.EventAsync(new Events.UserAquiredPower(turn, tiles[NextTilePosition.x, NextTilePosition.y].powerType, player2AquiredPowersAndCount[tiles[NextTilePosition.x, NextTilePosition.y].powerType]));
-
-            tiles[NextTilePosition.x, NextTilePosition.y].setPlayer2Data();
-          }
-          tiles[NextTilePosition.x, NextTilePosition.y].powerType = PowerType.None;
-          setPlayersCommonFunctionality(currentPosition, NextTilePosition, turn);
-        }
-        else if (tiles[NextTilePosition.x, NextTilePosition.y].tileType != currentPlayerSymbol)
-        {
-          DestroyIfTheTileHasOppositePlayer(turn, NextTilePosition);
-          //tiles[NextTilePosition.x, NextTilePosition.y].setWalkableData();
-          setPlayersCommonFunctionality(currentPosition, NextTilePosition, turn);
-        }
-        else if (tiles[NextTilePosition.x, NextTilePosition.y].tileType == currentPlayerSymbol)
-        {
-          setPlayersCommonFunctionality(currentPosition, NextTilePosition, turn);
+          Debug.LogError("--------------------Dude Game Over------------------------");
+          Debug.Log("--------------------Dude Game Over------------------------");
         }
       }
     }
 
     //  }
     //}
+  }
+
+  private void NextTileOperations(PlayerType turn, PlayerSymbol currentPlayerSymbol, Vector2Int currentPosition, Vector2Int NextTilePosition)
+  {
+    if (tiles[NextTilePosition.x, NextTilePosition.y].tileType == PlayerSymbol.Walkable)
+    {
+      if (turn == PlayerType.P1)
+      {
+        setPlayersCommonFunctionality(currentPosition, NextTilePosition, turn);
+        tiles[NextTilePosition.x, NextTilePosition.y].setPlayer1Data();
+      }
+      else
+      {
+        setPlayersCommonFunctionality(currentPosition, NextTilePosition, turn);
+
+        tiles[NextTilePosition.x, NextTilePosition.y].setPlayer2Data();
+      }
+    }
+    else if (tiles[NextTilePosition.x, NextTilePosition.y].tileType == PlayerSymbol.Blocker)
+    {
+      if (turn == PlayerType.P1)
+      {
+        if (player1AquiredPowersAndCount.ContainsKey(tiles[NextTilePosition.x, NextTilePosition.y].powerType))
+        {
+          player1AquiredPowersAndCount[tiles[NextTilePosition.x, NextTilePosition.y].powerType] = player1AquiredPowersAndCount[tiles[NextTilePosition.x, NextTilePosition.y].powerType] + 1;
+        }
+        else
+        {
+          player1AquiredPowersAndCount.Add(tiles[NextTilePosition.x, NextTilePosition.y].powerType, 1);
+        }
+        if (tiles[NextTilePosition.x, NextTilePosition.y].powerType == PowerType.Spawner)
+        {
+          noOfPipeGeneratorsLeftForPlayer1++;
+        }
+        Utils.EventAsync(new Events.UserAquiredPower(turn, tiles[NextTilePosition.x, NextTilePosition.y].powerType, player1AquiredPowersAndCount[tiles[NextTilePosition.x, NextTilePosition.y].powerType]));
+
+        tiles[NextTilePosition.x, NextTilePosition.y].setPlayer1Data();
+      }
+      else
+      {
+        if (player2AquiredPowersAndCount.ContainsKey(tiles[NextTilePosition.x, NextTilePosition.y].powerType))
+        {
+          player2AquiredPowersAndCount[tiles[NextTilePosition.x, NextTilePosition.y].powerType] = player2AquiredPowersAndCount[tiles[NextTilePosition.x, NextTilePosition.y].powerType] + 1;
+        }
+        else
+        {
+          player2AquiredPowersAndCount.Add(tiles[NextTilePosition.x, NextTilePosition.y].powerType, 1);
+        }
+        if (tiles[NextTilePosition.x, NextTilePosition.y].powerType == PowerType.Spawner)
+        {
+          noOfPipeGeneratorsLeftForPlayer2++;
+        }
+        Utils.EventAsync(new Events.UserAquiredPower(turn, tiles[NextTilePosition.x, NextTilePosition.y].powerType, player2AquiredPowersAndCount[tiles[NextTilePosition.x, NextTilePosition.y].powerType]));
+
+        tiles[NextTilePosition.x, NextTilePosition.y].setPlayer2Data();
+      }
+      tiles[NextTilePosition.x, NextTilePosition.y].powerType = PowerType.None;
+      setPlayersCommonFunctionality(currentPosition, NextTilePosition, turn);
+    }
+    else if (tiles[NextTilePosition.x, NextTilePosition.y].tileType != currentPlayerSymbol)
+    {
+      DestroyIfTheTileHasOppositePlayer(turn, NextTilePosition);
+      //tiles[NextTilePosition.x, NextTilePosition.y].setWalkableData();
+      setPlayersCommonFunctionality(currentPosition, NextTilePosition, turn);
+      if (turn == PlayerType.P1)
+      {
+        tiles[NextTilePosition.x, NextTilePosition.y].setPlayer1Data();
+      }
+      else
+      {
+        tiles[NextTilePosition.x, NextTilePosition.y].setPlayer2Data();
+      }
+    }
+    else if (tiles[NextTilePosition.x, NextTilePosition.y].tileType == currentPlayerSymbol)
+    {
+      setPlayersCommonFunctionality(currentPosition, NextTilePosition, turn);
+    }
   }
 
   private void playerTurnChanged(PlayerTurnChanged playerTurnChanged)
@@ -346,64 +351,11 @@ public class GameManager : MonoBehaviour
       player2SelectedTile = NextTilePosition;
     }
   }
-  public void AddedNewPipeGenerator(Transform startingPipe, PlayerType playerType)
-  {
-    StartingPipes startingPipes = startingPipe.GetComponent<StartingPipes>();
-    Vector2Int position = startingPipes.GetFrontTileIndex;
-    if (playerType == PlayerType.P1 && noOfPipeGeneratorsLeftForPlayer1 > 0)
-    {
-      GameObject player1Instance = Instantiate(player1Prefab, startingPipe.position, Quaternion.identity);
-      Player player = player1Instance.GetComponent<Player>();
-      player1ActiveGenerators.Add(player1Instance, position);
-      noOfPipeGeneratorsLeftForPlayer1--;
-      player.MoveTowards(new Vector3(tiles[position.x, position.y].transform.position.x, player.transform.position.y, tiles[position.x, position.y].transform.position.z));
-      player1SelectedTile = position;// hit.collider.transform.GetComponent<Tile>().position;
-      tiles[position.x, position.y].setPlayer1Data();
-    }
-    else if (playerType == PlayerType.P2 && noOfPipeGeneratorsLeftForPlayer2 > 0)
-    {
-      GameObject player2Instance = Instantiate(player2Prefab, startingPipe.position, Quaternion.identity);
-      Player player = player2Instance.GetComponent<Player>();
-      player2ActiveGenerators.Add(player2Instance, position);
-      noOfPipeGeneratorsLeftForPlayer2--;
-      player.MoveTowards(new Vector3(tiles[position.x, position.y].transform.position.x, player.transform.position.y, tiles[position.x, position.y].transform.position.z));
-      player2SelectedTile = position;// hit.collider.transform.GetComponent<Tile>().position;
-      tiles[position.x, position.y].setPlayer2Data();
-    }
-    //playerTurnChanged(playerType);
 
+  System.Random random = new System.Random();
+  public int GetRandomNumber(int min, int max)
+  {
+    return random.Next(min, max);
   }
 
-  private Vector2Int GetNextTile(Vector2Int currentTilePosition, SwipeDirection direction)
-  {
-    Vector2Int returnPosition = new Vector2Int(-1, -1);
-    switch (direction)
-    {
-      case SwipeDirection.Up:
-        if (currentTilePosition.y == 0)
-          returnPosition = new Vector2Int(-1, -1);
-        else
-          returnPosition = new Vector2Int(currentTilePosition.x, currentTilePosition.y - 1);
-        break;
-      case SwipeDirection.Down:
-        if (currentTilePosition.y == mapSize.y - 1)
-          returnPosition = new Vector2Int(-1, -1);
-        else
-          returnPosition = new Vector2Int(currentTilePosition.x, currentTilePosition.y + 1);
-        break;
-      case SwipeDirection.Left:
-        if (currentTilePosition.x == mapSize.x - 1)
-          returnPosition = new Vector2Int(-1, -1);
-        else
-          returnPosition = new Vector2Int(currentTilePosition.x + 1, currentTilePosition.y);
-        break;
-      case SwipeDirection.Right:
-        if (currentTilePosition.x == 0)
-          returnPosition = new Vector2Int(-1, -1);
-        else
-          returnPosition = new Vector2Int(currentTilePosition.x - 1, currentTilePosition.y);
-        break;
-    }
-    return returnPosition;
-  }
 }

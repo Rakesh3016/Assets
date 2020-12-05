@@ -27,4 +27,5 @@ public enum PowerType
   None,
   Spawner,
   Plus1,
+  //Shield
 }

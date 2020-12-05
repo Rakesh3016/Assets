@@ -26,6 +26,9 @@ public class Tile : MonoBehaviour
 
   public PowerType powerType;
 
+  public bool isTilePlayer1EndGoal = false;
+  public bool isTilePlayer2EndGoal = false;
+
   public void Awake()
   {
     renderer = WalkerPrefab.transform.GetComponent<Renderer>();
@@ -82,7 +85,7 @@ public class Tile : MonoBehaviour
 
   private PowerType GetRandomPower()
   {
-    int randomNumber = Virus.Utils.GetRandomNumber(1, Enum.GetValues(typeof(PowerType)).Length);
+    int randomNumber = GameManager.Instance.GetRandomNumber(1, Enum.GetValues(typeof(PowerType)).Length);
     Debug.Log("rand 1,3 " + randomNumber);
     return (PowerType)randomNumber;
   }

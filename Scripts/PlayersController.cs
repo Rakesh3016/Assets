@@ -80,36 +80,136 @@ public class PlayersController : AbstractController
   {
     if (Input.GetKeyDown(KeyCode.W))
     {
-      GameManager.Instance.Swipe(SwipeDirection.Up, turn);
+      if (turn == PlayerType.P1)
+      {
+        Vector2Int NextTilePosition = Virus.Utils.GetNextTile(new Vector2Int(GameManager.Instance.player1SelectedTile.x, GameManager.Instance.player1SelectedTile.y), SwipeDirection.Up, mapSize.x);
+        if (NextTilePosition.x != -1 || NextTilePosition.y != -1)
+        {
+          GameManager.Instance.Swipe(SwipeDirection.Up, turn);
+          SwapPlayerTurn();
+        }
+        else
+        {
+          Debug.LogWarning("Invalid Move");
+        }
+      }
+      else
+      {
+        Vector2Int NextTilePosition = Virus.Utils.GetNextTile(new Vector2Int(GameManager.Instance.player2SelectedTile.x, GameManager.Instance.player2SelectedTile.y), SwipeDirection.Up, mapSize.x);
+        if (NextTilePosition.x != -1 || NextTilePosition.y != -1)
+        {
+          GameManager.Instance.Swipe(SwipeDirection.Up, turn);
+          SwapPlayerTurn();
+        }
+        else
+        {
+          Debug.LogWarning("Invalid Move");
+        }
+      }
 
-      SwapPlayerTurn();
+
     }
     else if (Input.GetKeyDown(KeyCode.S))
     {
-      GameManager.Instance.Swipe(SwipeDirection.Down, turn);
-      SwapPlayerTurn();
+      if (turn == PlayerType.P1)
+      {
+        Vector2Int NextTilePosition = Virus.Utils.GetNextTile(new Vector2Int(GameManager.Instance.player1SelectedTile.x, GameManager.Instance.player1SelectedTile.y), SwipeDirection.Down, mapSize.x);
+        if (NextTilePosition.x != -1 || NextTilePosition.y != -1)
+        {
+          GameManager.Instance.Swipe(SwipeDirection.Down, turn);
+          SwapPlayerTurn();
+        }
+        else
+        {
+          Debug.LogWarning("Invalid Move");
+        }
+      }
+      else
+      {
+        Vector2Int NextTilePosition = Virus.Utils.GetNextTile(new Vector2Int(GameManager.Instance.player2SelectedTile.x, GameManager.Instance.player2SelectedTile.y), SwipeDirection.Down, mapSize.x);
+        if (NextTilePosition.x != -1 || NextTilePosition.y != -1)
+        {
+          GameManager.Instance.Swipe(SwipeDirection.Down, turn);
+          SwapPlayerTurn();
+        }
+        else
+        {
+          Debug.LogWarning("Invalid Move");
+        }
+      }
     }
     else if (Input.GetKeyDown(KeyCode.A))
     {
-      GameManager.Instance.Swipe(SwipeDirection.Left, turn);
-      SwapPlayerTurn();
+      if (turn == PlayerType.P1)
+      {
+        Vector2Int NextTilePosition = Virus.Utils.GetNextTile(new Vector2Int(GameManager.Instance.player1SelectedTile.x, GameManager.Instance.player1SelectedTile.y), SwipeDirection.Left, mapSize.x);
+        if (NextTilePosition.x != -1 || NextTilePosition.y != -1)
+        {
+          GameManager.Instance.Swipe(SwipeDirection.Left, turn);
+          SwapPlayerTurn();
+        }
+        else
+        {
+          Debug.LogWarning("Invalid Move");
+        }
+      }
+      else
+      {
+        Vector2Int NextTilePosition = Virus.Utils.GetNextTile(new Vector2Int(GameManager.Instance.player2SelectedTile.x, GameManager.Instance.player2SelectedTile.y), SwipeDirection.Left, mapSize.x);
+        if (NextTilePosition.x != -1 || NextTilePosition.y != -1)
+        {
+          GameManager.Instance.Swipe(SwipeDirection.Left, turn);
+          SwapPlayerTurn();
+        }
+        else
+        {
+          Debug.LogWarning("Invalid Move");
+        }
+      }
     }
     else if (Input.GetKeyDown(KeyCode.D))
     {
-      GameManager.Instance.Swipe(SwipeDirection.Right, turn);
-      SwapPlayerTurn();
+      if (turn == PlayerType.P1)
+      {
+        Vector2Int NextTilePosition = Virus.Utils.GetNextTile(new Vector2Int(GameManager.Instance.player1SelectedTile.x, GameManager.Instance.player1SelectedTile.y), SwipeDirection.Right, mapSize.x);
+        if (NextTilePosition.x != -1 || NextTilePosition.y != -1)
+        {
+          GameManager.Instance.Swipe(SwipeDirection.Right, turn);
+          SwapPlayerTurn();
+        }
+        else
+        {
+          Debug.LogWarning("Invalid Move");
+        }
+      }
+      else
+      {
+        Vector2Int NextTilePosition = Virus.Utils.GetNextTile(new Vector2Int(GameManager.Instance.player2SelectedTile.x, GameManager.Instance.player2SelectedTile.y), SwipeDirection.Right, mapSize.x);
+        if (NextTilePosition.x != -1 || NextTilePosition.y != -1)
+        {
+          GameManager.Instance.Swipe(SwipeDirection.Right, turn);
+          SwapPlayerTurn();
+        }
+        else
+        {
+          Debug.LogWarning("Invalid Move");
+        }
+      }
     }
     if (Input.GetButtonDown("Fire1"))
     {
       RaycastHit hit;
-      bool doesHitStartingPipes = false;
+      bool doesHitStartingPipesP1 = false;
+      bool doesHitStartingPipesP2 = false;
       Ray ray = Camera.main.ScreenPointToRay(Input.mousePosition);
       if (Physics.Raycast(ray, out hit))
       {
         if (hit.collider != null)
         {
           if (hit.collider.transform.tag == "StartingPipes")
-            doesHitStartingPipes = true;
+            doesHitStartingPipesP1 = true;
+          else if (hit.collider.transform.tag == "StartingPipesP2")
+            doesHitStartingPipesP2 = true;
           else if (hit.collider.transform.tag == "Walkable")
           {
             Tile tile = hit.collider.transform.GetComponent<Tile>();
@@ -124,16 +224,16 @@ public class PlayersController : AbstractController
           }
           //Debug.Log("Selected Tile " + player1SelectedTile.x + " " + player1SelectedTile.y);
         }
-        if (doesHitStartingPipes)
+        if (doesHitStartingPipesP1 || doesHitStartingPipesP2)
         {
           //StartingPipes startingPipes = hit.collider.transform.GetComponent<StartingPipes>();
           //Vector2Int position = startingPipes.GetFrontTileIndex;
-          if (turn == PlayerType.P1 && GameManager.Instance.noOfPipeGeneratorsLeftForPlayer1 > 0)
+          if (turn == PlayerType.P1 && GameManager.Instance.noOfPipeGeneratorsLeftForPlayer1 > 0 && doesHitStartingPipesP1)
           {
             GameManager.Instance.AddedNewPipeGenerator(hit.collider.transform, turn);
             SwapPlayerTurn();
           }
-          else if (turn == PlayerType.P2 && GameManager.Instance.noOfPipeGeneratorsLeftForPlayer2 > 0)
+          else if (turn == PlayerType.P2 && GameManager.Instance.noOfPipeGeneratorsLeftForPlayer2 > 0 && doesHitStartingPipesP2)
           {
             GameManager.Instance.AddedNewPipeGenerator(hit.collider.transform, turn);
             SwapPlayerTurn();
