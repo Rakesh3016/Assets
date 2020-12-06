@@ -16,6 +16,14 @@ public class PlayersController : AbstractController
   private float speed;
 
   Dictionary<PowerType, bool> userSelectedPowers = new Dictionary<PowerType, bool>();
+
+
+  [HideInInspector]
+  public bool isPlayer1UsingShieldPower;
+
+  [HideInInspector]
+  public bool isPlayer2UsingShieldPower;
+
   //Vector2Int player1SelectedTile = new Vector2Int(-1, -1);
   //Vector2Int player2SelectedTile = new Vector2Int(-1, -1);
   // Start is called before the first frame update
@@ -54,6 +62,14 @@ public class PlayersController : AbstractController
   private void onUserSelectedPower(UserSelectedPower e)
   {
     userSelectedPowers[e.powerType] = e.isUserSelectedPower;
+    if (e.powerType == PowerType.Shield && turn == PlayerType.P1)
+    {
+      isPlayer1UsingShieldPower = e.isUserSelectedPower;
+    }
+    else if (e.powerType == PowerType.Shield && turn == PlayerType.P2)
+    {
+      isPlayer2UsingShieldPower = e.isUserSelectedPower;
+    }
   }
 
   private void SwapPlayerTurn()
@@ -64,6 +80,20 @@ public class PlayersController : AbstractController
       Utils.EventAsync(new Events.UserUsedSelectedPower(PowerType.Plus1, turn));
       return;
     }
+
+    if (turn == PlayerType.P1 && isPlayer2UsingShieldPower)
+    {
+      isPlayer2UsingShieldPower = false;
+      Utils.EventAsync(new Events.UserUsedSelectedPower(PowerType.Shield, PlayerType.P2));
+
+    }
+    else if (turn == PlayerType.P2 && isPlayer1UsingShieldPower)
+    {
+      isPlayer1UsingShieldPower = false;
+      Utils.EventAsync(new Events.UserUsedSelectedPower(PowerType.Shield, PlayerType.P1));
+
+    }
+
     if (turn == PlayerType.P1)
     {
       turn = PlayerType.P2;
@@ -71,7 +101,7 @@ public class PlayersController : AbstractController
     else
       turn = PlayerType.P1;
 
-    Utils.EventAsync(new PlayerTurnChanged(turn));
+    Utils.EventAsync(new PlayerTurnChangedTo(turn));
 
     ResetPowers();
   }
@@ -85,6 +115,16 @@ public class PlayersController : AbstractController
         Vector2Int NextTilePosition = Virus.Utils.GetNextTile(new Vector2Int(GameManager.Instance.player1SelectedTile.x, GameManager.Instance.player1SelectedTile.y), SwipeDirection.Up, mapSize.x);
         if (NextTilePosition.x != -1 || NextTilePosition.y != -1)
         {
+          if (isPlayer2UsingShieldPower && GameManager.Instance.tiles[NextTilePosition.x, NextTilePosition.y].tileType == PlayerSymbol.P2)
+          {
+            foreach (KeyValuePair<GameObject, Vector2Int> b in GameManager.Instance.player2ActiveGenerators)
+            {
+              if (b.Value == NextTilePosition)
+              {
+                return;
+              }
+            }
+          }
           GameManager.Instance.Swipe(SwipeDirection.Up, turn);
           SwapPlayerTurn();
         }
@@ -98,6 +138,16 @@ public class PlayersController : AbstractController
         Vector2Int NextTilePosition = Virus.Utils.GetNextTile(new Vector2Int(GameManager.Instance.player2SelectedTile.x, GameManager.Instance.player2SelectedTile.y), SwipeDirection.Up, mapSize.x);
         if (NextTilePosition.x != -1 || NextTilePosition.y != -1)
         {
+          if (isPlayer1UsingShieldPower && GameManager.Instance.tiles[NextTilePosition.x, NextTilePosition.y].tileType == PlayerSymbol.P1)
+          {
+            foreach (KeyValuePair<GameObject, Vector2Int> b in GameManager.Instance.player1ActiveGenerators)
+            {
+              if (b.Value == NextTilePosition)
+              {
+                return;
+              }
+            }
+          }
           GameManager.Instance.Swipe(SwipeDirection.Up, turn);
           SwapPlayerTurn();
         }
@@ -116,6 +166,16 @@ public class PlayersController : AbstractController
         Vector2Int NextTilePosition = Virus.Utils.GetNextTile(new Vector2Int(GameManager.Instance.player1SelectedTile.x, GameManager.Instance.player1SelectedTile.y), SwipeDirection.Down, mapSize.x);
         if (NextTilePosition.x != -1 || NextTilePosition.y != -1)
         {
+          if (isPlayer2UsingShieldPower && GameManager.Instance.tiles[NextTilePosition.x, NextTilePosition.y].tileType == PlayerSymbol.P2)
+          {
+            foreach (KeyValuePair<GameObject, Vector2Int> b in GameManager.Instance.player2ActiveGenerators)
+            {
+              if (b.Value == NextTilePosition)
+              {
+                return;
+              }
+            }
+          }
           GameManager.Instance.Swipe(SwipeDirection.Down, turn);
           SwapPlayerTurn();
         }
@@ -129,6 +189,16 @@ public class PlayersController : AbstractController
         Vector2Int NextTilePosition = Virus.Utils.GetNextTile(new Vector2Int(GameManager.Instance.player2SelectedTile.x, GameManager.Instance.player2SelectedTile.y), SwipeDirection.Down, mapSize.x);
         if (NextTilePosition.x != -1 || NextTilePosition.y != -1)
         {
+          if (isPlayer1UsingShieldPower && GameManager.Instance.tiles[NextTilePosition.x, NextTilePosition.y].tileType == PlayerSymbol.P1)
+          {
+            foreach (KeyValuePair<GameObject, Vector2Int> b in GameManager.Instance.player1ActiveGenerators)
+            {
+              if (b.Value == NextTilePosition)
+              {
+                return;
+              }
+            }
+          }
           GameManager.Instance.Swipe(SwipeDirection.Down, turn);
           SwapPlayerTurn();
         }
@@ -145,6 +215,16 @@ public class PlayersController : AbstractController
         Vector2Int NextTilePosition = Virus.Utils.GetNextTile(new Vector2Int(GameManager.Instance.player1SelectedTile.x, GameManager.Instance.player1SelectedTile.y), SwipeDirection.Left, mapSize.x);
         if (NextTilePosition.x != -1 || NextTilePosition.y != -1)
         {
+          if (isPlayer2UsingShieldPower && GameManager.Instance.tiles[NextTilePosition.x, NextTilePosition.y].tileType == PlayerSymbol.P2)
+          {
+            foreach (KeyValuePair<GameObject, Vector2Int> b in GameManager.Instance.player2ActiveGenerators)
+            {
+              if (b.Value == NextTilePosition)
+              {
+                return;
+              }
+            }
+          }
           GameManager.Instance.Swipe(SwipeDirection.Left, turn);
           SwapPlayerTurn();
         }
@@ -158,6 +238,16 @@ public class PlayersController : AbstractController
         Vector2Int NextTilePosition = Virus.Utils.GetNextTile(new Vector2Int(GameManager.Instance.player2SelectedTile.x, GameManager.Instance.player2SelectedTile.y), SwipeDirection.Left, mapSize.x);
         if (NextTilePosition.x != -1 || NextTilePosition.y != -1)
         {
+          if (isPlayer1UsingShieldPower && GameManager.Instance.tiles[NextTilePosition.x, NextTilePosition.y].tileType == PlayerSymbol.P1)
+          {
+            foreach (KeyValuePair<GameObject, Vector2Int> b in GameManager.Instance.player1ActiveGenerators)
+            {
+              if (b.Value == NextTilePosition)
+              {
+                return;
+              }
+            }
+          }
           GameManager.Instance.Swipe(SwipeDirection.Left, turn);
           SwapPlayerTurn();
         }
@@ -174,6 +264,16 @@ public class PlayersController : AbstractController
         Vector2Int NextTilePosition = Virus.Utils.GetNextTile(new Vector2Int(GameManager.Instance.player1SelectedTile.x, GameManager.Instance.player1SelectedTile.y), SwipeDirection.Right, mapSize.x);
         if (NextTilePosition.x != -1 || NextTilePosition.y != -1)
         {
+          if (isPlayer2UsingShieldPower && GameManager.Instance.tiles[NextTilePosition.x, NextTilePosition.y].tileType == PlayerSymbol.P2)
+          {
+            foreach (KeyValuePair<GameObject, Vector2Int> b in GameManager.Instance.player2ActiveGenerators)
+            {
+              if (b.Value == NextTilePosition)
+              {
+                return;
+              }
+            }
+          }
           GameManager.Instance.Swipe(SwipeDirection.Right, turn);
           SwapPlayerTurn();
         }
@@ -187,6 +287,16 @@ public class PlayersController : AbstractController
         Vector2Int NextTilePosition = Virus.Utils.GetNextTile(new Vector2Int(GameManager.Instance.player2SelectedTile.x, GameManager.Instance.player2SelectedTile.y), SwipeDirection.Right, mapSize.x);
         if (NextTilePosition.x != -1 || NextTilePosition.y != -1)
         {
+          if (isPlayer1UsingShieldPower && GameManager.Instance.tiles[NextTilePosition.x, NextTilePosition.y].tileType == PlayerSymbol.P1)
+          {
+            foreach (KeyValuePair<GameObject, Vector2Int> b in GameManager.Instance.player1ActiveGenerators)
+            {
+              if (b.Value == NextTilePosition)
+              {
+                return;
+              }
+            }
+          }
           GameManager.Instance.Swipe(SwipeDirection.Right, turn);
           SwapPlayerTurn();
         }
@@ -230,14 +340,17 @@ public class PlayersController : AbstractController
           //Vector2Int position = startingPipes.GetFrontTileIndex;
           if (turn == PlayerType.P1 && GameManager.Instance.noOfPipeGeneratorsLeftForPlayer1 > 0 && doesHitStartingPipesP1)
           {
+            Utils.EventAsync(new Events.UserUsedSelectedPower(PowerType.Spawner, turn));
             GameManager.Instance.AddedNewPipeGenerator(hit.collider.transform, turn);
             SwapPlayerTurn();
           }
           else if (turn == PlayerType.P2 && GameManager.Instance.noOfPipeGeneratorsLeftForPlayer2 > 0 && doesHitStartingPipesP2)
           {
+            Utils.EventAsync(new Events.UserUsedSelectedPower(PowerType.Spawner, turn));
             GameManager.Instance.AddedNewPipeGenerator(hit.collider.transform, turn);
             SwapPlayerTurn();
           }
+
         }
       }
     }

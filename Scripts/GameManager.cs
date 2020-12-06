@@ -21,9 +21,10 @@ public class GameManager : MonoBehaviour
 
   public GameObject player1Prefab;
   public GameObject player2Prefab;
-
-  Dictionary<GameObject, Vector2Int> player1ActiveGenerators;
-  Dictionary<GameObject, Vector2Int> player2ActiveGenerators;
+  [HideInInspector]
+  public Dictionary<GameObject, Vector2Int> player1ActiveGenerators;
+  [HideInInspector]
+  public Dictionary<GameObject, Vector2Int> player2ActiveGenerators;
 
   Dictionary<PowerType, int> player1AquiredPowersAndCount;
   Dictionary<PowerType, int> player2AquiredPowersAndCount;
@@ -73,11 +74,15 @@ public class GameManager : MonoBehaviour
     Utils.EventAsync(new Events.GetMapSize(onGetMapSize));
 
     RegisterEvents();
+
+    Utils.EventAsync(new Events.UserAquiredPower(PlayerType.P1, PowerType.Spawner, 1));
+    Utils.EventAsync(new Events.UserAquiredPower(PlayerType.P2, PowerType.Spawner, 1));
+
   }
 
   private void RegisterEvents()
   {
-    EventManager.Instance.AddListener<PlayerTurnChanged>(playerTurnChanged);
+    EventManager.Instance.AddListener<PlayerTurnChangedTo>(playerTurnChanged);
 
   }
 
@@ -258,7 +263,7 @@ public class GameManager : MonoBehaviour
     }
   }
 
-  private void playerTurnChanged(PlayerTurnChanged playerTurnChanged)
+  private void playerTurnChanged(PlayerTurnChangedTo playerTurnChanged)
   {
     foreach (Tile tempTile in tiles)
     {
@@ -286,6 +291,10 @@ public class GameManager : MonoBehaviour
       {
         player2ActiveGenerators.Remove(seletedPipesGenerator);
         Destroy(seletedPipesGenerator);
+        if (player2ActiveGenerators.Count <= 0)
+        {
+          Utils.EventAsync(new Events.GameOverEvent(turn));
+        }
       }
     }
     else
@@ -303,6 +312,10 @@ public class GameManager : MonoBehaviour
       {
         player1ActiveGenerators.Remove(seletedPipesGenerator);
         Destroy(seletedPipesGenerator);
+        if (player1ActiveGenerators.Count <= 0)
+        {
+          Utils.EventAsync(new Events.GameOverEvent(turn));
+        }
       }
     }
   }

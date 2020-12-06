@@ -2,6 +2,7 @@
 using System;
 using System.Collections;
 using System.Collections.Generic;
+using TMPro;
 using UnityEngine;
 using UnityEngine.UI;
 
@@ -9,6 +10,12 @@ public class UIController : AbstractController
 {
   public Transform Player1PowerParent;
   public Transform Player2PowerParent;
+
+  public GameObject player1PowerBlocker;
+  public GameObject player2PowerBlocker;
+
+  public TextMeshProUGUI turnText;
+  public Image turnImage;
 
   //public PowerToggleWidget PowerUpToggle;
 
@@ -59,12 +66,18 @@ public class UIController : AbstractController
   public override void RegisterEvents()
   {
     EventManager.Instance.AddListener<UserAquiredPower>(onUserGotNewPower);
-    EventManager.Instance.AddListener<PlayerTurnChanged>(onPlayerTurnChanged);
+    EventManager.Instance.AddListener<PlayerTurnChangedTo>(onPlayerTurnChanged);
     EventManager.Instance.AddListener<UserUsedSelectedPower>(onUserUsedSelectedPower);
     EventManager.Instance.AddListener<GameOverEvent>(onGameOverEvent);
 
   }
-
+  public override void UnRegisterEvents()
+  {
+    EventManager.Instance.RemoveListener<UserAquiredPower>(onUserGotNewPower);
+    EventManager.Instance.RemoveListener<PlayerTurnChangedTo>(onPlayerTurnChanged);
+    EventManager.Instance.RemoveListener<UserUsedSelectedPower>(onUserUsedSelectedPower);
+    EventManager.Instance.RemoveListener<GameOverEvent>(onGameOverEvent);
+  }
   private void onGameOverEvent(GameOverEvent e)
   {
     gameOver.SetActive(true);
@@ -75,18 +88,24 @@ public class UIController : AbstractController
 
   }
 
-  private void onPlayerTurnChanged(PlayerTurnChanged e)
+  private void onPlayerTurnChanged(PlayerTurnChangedTo e)
   {
-    //if (e.playerType == PlayerType.P1)
-    //{
-    //  Player1PowerParent.gameObject.SetActive(true);
-    //  Player2PowerParent.gameObject.SetActive(false);
-    //}
-    //else
-    //{
-    //  Player1PowerParent.gameObject.SetActive(false);
-    //  Player2PowerParent.gameObject.SetActive(true);
-    //}
+    if (e.playerType == PlayerType.P1)
+    {
+      player1PowerBlocker.SetActive(false);
+      player2PowerBlocker.SetActive(true);
+      turnText.text = "P1";
+      turnImage.color = new Color(1, 0.4f, 0.27f, 1);
+    }
+    else
+    {
+      player1PowerBlocker.SetActive(true);
+      player2PowerBlocker.SetActive(false);
+      turnText.text = "P2";
+      turnImage.color = new Color(0, 0.58f, 1, 1);
+
+
+    }
   }
 
   private void onUserUsedSelectedPower(UserUsedSelectedPower e)
@@ -103,10 +122,7 @@ public class UIController : AbstractController
     }
   }
 
-  public override void UnRegisterEvents()
-  {
-    EventManager.Instance.RemoveListener<UserAquiredPower>(onUserGotNewPower);
-  }
+
   private void onUserGotNewPower(UserAquiredPower e)
   {
     if (e.playerWhoAquiredPower == PlayerType.P1)
