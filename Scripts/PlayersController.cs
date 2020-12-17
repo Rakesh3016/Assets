@@ -112,6 +112,8 @@ public class PlayersController : AbstractController
     {
       if (turn == PlayerType.P1)
       {
+        if (!GameManager.Instance.tiles[GameManager.Instance.player1SelectedTile.x, GameManager.Instance.player1SelectedTile.y].containsP1PipeGenerator)
+          return;
         Vector2Int NextTilePosition = Virus.Utils.GetNextTile(new Vector2Int(GameManager.Instance.player1SelectedTile.x, GameManager.Instance.player1SelectedTile.y), SwipeDirection.Up, mapSize.x);
         if (NextTilePosition.x != -1 || NextTilePosition.y != -1)
         {
@@ -135,6 +137,8 @@ public class PlayersController : AbstractController
       }
       else
       {
+        if (!GameManager.Instance.tiles[GameManager.Instance.player2SelectedTile.x, GameManager.Instance.player2SelectedTile.y].containsP2PipeGenerator)
+          return;
         Vector2Int NextTilePosition = Virus.Utils.GetNextTile(new Vector2Int(GameManager.Instance.player2SelectedTile.x, GameManager.Instance.player2SelectedTile.y), SwipeDirection.Up, mapSize.x);
         if (NextTilePosition.x != -1 || NextTilePosition.y != -1)
         {
@@ -163,6 +167,8 @@ public class PlayersController : AbstractController
     {
       if (turn == PlayerType.P1)
       {
+        if (!GameManager.Instance.tiles[GameManager.Instance.player1SelectedTile.x, GameManager.Instance.player1SelectedTile.y].containsP1PipeGenerator)
+          return;
         Vector2Int NextTilePosition = Virus.Utils.GetNextTile(new Vector2Int(GameManager.Instance.player1SelectedTile.x, GameManager.Instance.player1SelectedTile.y), SwipeDirection.Down, mapSize.x);
         if (NextTilePosition.x != -1 || NextTilePosition.y != -1)
         {
@@ -186,6 +192,8 @@ public class PlayersController : AbstractController
       }
       else
       {
+        if (!GameManager.Instance.tiles[GameManager.Instance.player2SelectedTile.x, GameManager.Instance.player2SelectedTile.y].containsP2PipeGenerator)
+          return;
         Vector2Int NextTilePosition = Virus.Utils.GetNextTile(new Vector2Int(GameManager.Instance.player2SelectedTile.x, GameManager.Instance.player2SelectedTile.y), SwipeDirection.Down, mapSize.x);
         if (NextTilePosition.x != -1 || NextTilePosition.y != -1)
         {
@@ -212,6 +220,8 @@ public class PlayersController : AbstractController
     {
       if (turn == PlayerType.P1)
       {
+        if (!GameManager.Instance.tiles[GameManager.Instance.player1SelectedTile.x, GameManager.Instance.player1SelectedTile.y].containsP1PipeGenerator)
+          return;
         Vector2Int NextTilePosition = Virus.Utils.GetNextTile(new Vector2Int(GameManager.Instance.player1SelectedTile.x, GameManager.Instance.player1SelectedTile.y), SwipeDirection.Left, mapSize.x);
         if (NextTilePosition.x != -1 || NextTilePosition.y != -1)
         {
@@ -235,6 +245,8 @@ public class PlayersController : AbstractController
       }
       else
       {
+        if (!GameManager.Instance.tiles[GameManager.Instance.player2SelectedTile.x, GameManager.Instance.player2SelectedTile.y].containsP2PipeGenerator)
+          return;
         Vector2Int NextTilePosition = Virus.Utils.GetNextTile(new Vector2Int(GameManager.Instance.player2SelectedTile.x, GameManager.Instance.player2SelectedTile.y), SwipeDirection.Left, mapSize.x);
         if (NextTilePosition.x != -1 || NextTilePosition.y != -1)
         {
@@ -261,6 +273,8 @@ public class PlayersController : AbstractController
     {
       if (turn == PlayerType.P1)
       {
+        if (!GameManager.Instance.tiles[GameManager.Instance.player1SelectedTile.x, GameManager.Instance.player1SelectedTile.y].containsP1PipeGenerator)
+          return;
         Vector2Int NextTilePosition = Virus.Utils.GetNextTile(new Vector2Int(GameManager.Instance.player1SelectedTile.x, GameManager.Instance.player1SelectedTile.y), SwipeDirection.Right, mapSize.x);
         if (NextTilePosition.x != -1 || NextTilePosition.y != -1)
         {
@@ -284,6 +298,8 @@ public class PlayersController : AbstractController
       }
       else
       {
+        if (!GameManager.Instance.tiles[GameManager.Instance.player2SelectedTile.x, GameManager.Instance.player2SelectedTile.y].containsP2PipeGenerator)
+          return;
         Vector2Int NextTilePosition = Virus.Utils.GetNextTile(new Vector2Int(GameManager.Instance.player2SelectedTile.x, GameManager.Instance.player2SelectedTile.y), SwipeDirection.Right, mapSize.x);
         if (NextTilePosition.x != -1 || NextTilePosition.y != -1)
         {
@@ -323,11 +339,11 @@ public class PlayersController : AbstractController
           else if (hit.collider.transform.tag == "Walkable")
           {
             Tile tile = hit.collider.transform.GetComponent<Tile>();
-            if (tile.containsPipeGenerator && tile.tileType == PlayerSymbol.P1 && turn == PlayerType.P1)
+            if (tile.containsP1PipeGenerator && turn == PlayerType.P1)
             {
               GameManager.Instance.player1SelectedTile = tile.position;
             }
-            else if (tile.containsPipeGenerator && tile.tileType == PlayerSymbol.P2 && turn == PlayerType.P2)
+            else if (tile.containsP2PipeGenerator && turn == PlayerType.P2)
             {
               GameManager.Instance.player2SelectedTile = tile.position;
             }
@@ -338,13 +354,13 @@ public class PlayersController : AbstractController
         {
           //StartingPipes startingPipes = hit.collider.transform.GetComponent<StartingPipes>();
           //Vector2Int position = startingPipes.GetFrontTileIndex;
-          if (turn == PlayerType.P1 && GameManager.Instance.noOfPipeGeneratorsLeftForPlayer1 > 0 && doesHitStartingPipesP1)
+          if (turn == PlayerType.P1 && GameManager.Instance.noOfPipeGeneratorsLeftForPlayer1 > 0 && doesHitStartingPipesP1 && userSelectedPowers[PowerType.Spawner])
           {
             Utils.EventAsync(new Events.UserUsedSelectedPower(PowerType.Spawner, turn));
             GameManager.Instance.AddedNewPipeGenerator(hit.collider.transform, turn);
             SwapPlayerTurn();
           }
-          else if (turn == PlayerType.P2 && GameManager.Instance.noOfPipeGeneratorsLeftForPlayer2 > 0 && doesHitStartingPipesP2)
+          else if (turn == PlayerType.P2 && GameManager.Instance.noOfPipeGeneratorsLeftForPlayer2 > 0 && doesHitStartingPipesP2 && userSelectedPowers[PowerType.Spawner])
           {
             Utils.EventAsync(new Events.UserUsedSelectedPower(PowerType.Spawner, turn));
             GameManager.Instance.AddedNewPipeGenerator(hit.collider.transform, turn);

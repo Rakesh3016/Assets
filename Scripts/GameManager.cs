@@ -83,9 +83,27 @@ public class GameManager : MonoBehaviour
   private void RegisterEvents()
   {
     EventManager.Instance.AddListener<PlayerTurnChangedTo>(playerTurnChanged);
+    EventManager.Instance.AddListener<UserUsedSelectedPower>(onUserUsedSelectedPower);
 
   }
 
+  private void onUserUsedSelectedPower(UserUsedSelectedPower e)
+  {
+    if (e.type == PlayerType.P1)
+    {
+      if (player1AquiredPowersAndCount.ContainsKey(e.usedPower))
+      {
+        player1AquiredPowersAndCount[e.usedPower] = player1AquiredPowersAndCount[e.usedPower] - 1;
+      }
+    }
+    else
+    {
+      if (player2AquiredPowersAndCount.ContainsKey(e.usedPower))
+      {
+        player2AquiredPowersAndCount[e.usedPower] = player2AquiredPowersAndCount[e.usedPower] - 1;
+      }
+    }
+  }
 
   private void onGetMapSize(Vector2Int obj)
   {
@@ -168,7 +186,8 @@ public class GameManager : MonoBehaviour
 
       if (NextTilePosition.x != -1 || NextTilePosition.y != -1)
       {
-        tiles[currentPosition.x, currentPosition.y].containsPipeGenerator = false;
+        tiles[currentPosition.x, currentPosition.y].containsP1PipeGenerator = false;
+        tiles[currentPosition.x, currentPosition.y].containsP2PipeGenerator = false;
         NextTileOperations(turn, currentPlayerSymbol, currentPosition, NextTilePosition);
 
         //Check For Game End Condition
@@ -291,7 +310,12 @@ public class GameManager : MonoBehaviour
       {
         player2ActiveGenerators.Remove(seletedPipesGenerator);
         Destroy(seletedPipesGenerator);
-        if (player2ActiveGenerators.Count <= 0)
+        int remainingSpawners = 0;
+        if (player2AquiredPowersAndCount.ContainsKey(PowerType.Spawner))
+        {
+          remainingSpawners = player2AquiredPowersAndCount[PowerType.Spawner];
+        }
+        if (player2ActiveGenerators.Count <= 0 && remainingSpawners <= 0)
         {
           Utils.EventAsync(new Events.GameOverEvent(turn));
         }
@@ -312,7 +336,12 @@ public class GameManager : MonoBehaviour
       {
         player1ActiveGenerators.Remove(seletedPipesGenerator);
         Destroy(seletedPipesGenerator);
-        if (player1ActiveGenerators.Count <= 0)
+        int remainingSpawners = 0;
+        if (player2AquiredPowersAndCount.ContainsKey(PowerType.Spawner))
+        {
+          remainingSpawners = player2AquiredPowersAndCount[PowerType.Spawner];
+        }
+        if (player1ActiveGenerators.Count <= 0 && remainingSpawners <= 0)
         {
           Utils.EventAsync(new Events.GameOverEvent(turn));
         }

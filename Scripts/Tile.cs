@@ -20,7 +20,8 @@ public class Tile : MonoBehaviour
   public GameObject WalkerPrefab;
   public Material WalkableMaterialPlayer1;
   public Material WalkableMaterialPlayer2;
-  public bool containsPipeGenerator;
+  public bool containsP1PipeGenerator;
+  public bool containsP2PipeGenerator;
 
   private Renderer renderer;
 
@@ -63,7 +64,8 @@ public class Tile : MonoBehaviour
   {
     //renderer.material = player1Material;
     tileType = PlayerSymbol.P1;
-    containsPipeGenerator = true;
+    containsP1PipeGenerator = true;
+    containsP2PipeGenerator = false;
     activateValidPrefab(tileType);
 
   }
@@ -71,7 +73,8 @@ public class Tile : MonoBehaviour
   {
     //renderer.material = walkableMaterial;
     tileType = PlayerSymbol.Walkable;
-    containsPipeGenerator = false;
+    containsP1PipeGenerator = false;
+    containsP2PipeGenerator = false;
     activateValidPrefab(tileType);
   }
 
@@ -79,7 +82,8 @@ public class Tile : MonoBehaviour
   {
     //renderer.material = player2Material;
     tileType = PlayerSymbol.P2;
-    containsPipeGenerator = true;
+    containsP2PipeGenerator = true;
+    containsP1PipeGenerator = false;
     activateValidPrefab(tileType);
   }
 
