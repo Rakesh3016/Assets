@@ -4,6 +4,7 @@ using UnityEngine;
 
 public class StartingPipes : MonoBehaviour
 {
+  public int id;
   public Vector2Int frontTileIndex;
   public Vector2Int GetFrontTileIndex
   {

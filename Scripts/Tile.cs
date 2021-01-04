@@ -22,7 +22,6 @@ public class Tile : MonoBehaviour
   public Material WalkableMaterialPlayer2;
   public bool containsP1PipeGenerator;
   public bool containsP2PipeGenerator;
-
   private Renderer renderer;
 
   public PowerType powerType;
@@ -44,7 +43,7 @@ public class Tile : MonoBehaviour
 
   }
 
-  public void setInitialData(PlayerSymbol playerSymbol, Vector2Int position)
+  public void setInitialData(PlayerSymbol playerSymbol, PowerType powerType, Vector2Int position)
   {
     //if (playerSymbol == PlayerSymbol.Walkable)
     //{
@@ -55,6 +54,7 @@ public class Tile : MonoBehaviour
     //  renderer.material = blockerMaterial;
 
     tileType = playerSymbol;
+    this.powerType = powerType;
     activateValidPrefab(tileType);
 
     this.position = position;
@@ -82,8 +82,8 @@ public class Tile : MonoBehaviour
   {
     //renderer.material = player2Material;
     tileType = PlayerSymbol.P2;
-    containsP2PipeGenerator = true;
     containsP1PipeGenerator = false;
+    containsP2PipeGenerator = true;
     activateValidPrefab(tileType);
   }
 
@@ -104,7 +104,7 @@ public class Tile : MonoBehaviour
     switch (tileType)
     {
       case PlayerSymbol.Blocker:
-        powerType = GetRandomPower();
+        //powerType = GetRandomPower();
         blockerPrefab.SetActive(true);
         break;
       case PlayerSymbol.P1:

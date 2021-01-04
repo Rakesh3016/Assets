@@ -23,5 +23,13 @@ public class MoveCamera : MonoBehaviour
     {
       this.transform.position += Vector3.left;
     }
+    else if (Input.GetKeyDown(KeyCode.T))
+    {
+      this.transform.position += Vector3.forward;
+    }
+    else if (Input.GetKeyDown(KeyCode.G))
+    {
+      this.transform.position += Vector3.back;
+    }
   }
 }

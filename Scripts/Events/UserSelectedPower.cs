@@ -7,11 +7,13 @@ namespace Events
   {
     public PowerType powerType;
     public bool isUserSelectedPower;
+    public PlayerType playerType;
 
-    public UserSelectedPower(PowerType powerType, bool isUserSelectedPower)
+    public UserSelectedPower(PowerType powerType, bool isUserSelectedPower, PlayerType playerType)
     {
       this.powerType = powerType;
       this.isUserSelectedPower = isUserSelectedPower;
+      this.playerType = playerType;
     }
   }
 

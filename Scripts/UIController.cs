@@ -4,6 +4,7 @@ using System.Collections;
 using System.Collections.Generic;
 using TMPro;
 using UnityEngine;
+using UnityEngine.SceneManagement;
 using UnityEngine.UI;
 
 public class UIController : AbstractController
@@ -24,6 +25,10 @@ public class UIController : AbstractController
 
 
   public GameObject gameOver;
+  public GameObject disConnected;
+  public Button disConnectedCloseButton;
+  public Button MenuButton;
+  public Text interuptionText;
   public Text playerWonText;
 
   public IDictionary<PowerType, PowerToggleWidget> Player1PowersAndCount
@@ -45,22 +50,58 @@ public class UIController : AbstractController
 
   public override void Initialize()
   {
+    //this.gameObject.InvokeMethodInChildrenAndSelf<Button>(x => x.onClick.AddListener(() => onClick(x.name)));
+
+
+    //Button[] AllButtons = GetComponentsInChildren<Button>();
+    //foreach (Button btn in AllButtons)
+    //{
+    //  btn.onClick.AddListener(() => );
+    //}
     foreach (KeyValuePair<PowerType, PowerToggleWidget> Player1Power in player1AquiredPowersAndCountSerilized)
     {
       Player1Power.Value.toggle.onValueChanged.AddListener(delegate
           {
-            onChangePowerToggle(Player1Power.Value, Player1Power.Value.toggle.isOn);
+            onChangePowerToggle(Player1Power.Value, Player1Power.Value.toggle.isOn, PlayerType.P1);
           });
     }
     foreach (KeyValuePair<PowerType, PowerToggleWidget> Player2Power in player2AquiredPowersAndCountSerilized)
     {
       Player2Power.Value.toggle.onValueChanged.AddListener(delegate
       {
-        onChangePowerToggle(Player2Power.Value, Player2Power.Value.toggle.isOn);
+        onChangePowerToggle(Player2Power.Value, Player2Power.Value.toggle.isOn, PlayerType.P2);
       });
     }
     //player1AquiredPowersAndCount = new Dictionary<PowerType, PowerToggleWidget>();
     //player2AquiredPowersAndCount = new Dictionary<PowerType, PowerToggleWidget>();
+  }
+
+
+  private void OnIncrementTimer(int remainingSeconds)
+  {
+    float value = map(remainingSeconds, 0, GameManager.Instance.maxTimeForTurn, 0, 1);
+    turnImage.fillAmount = value;
+  }
+
+  private float map(float n, float start1, float stop1, float start2, float stop2)
+  {
+    return ((n - start1) / (stop1 - start1)) * (stop2 - start2) + start2;
+  }
+
+  Action onCLoseClicked = null;
+  private void onClick(string btn)
+  {
+    switch (btn)
+    {
+      case "Close_Button":
+        disConnected.SetActive(false);
+        onCLoseClicked.Invoke();
+        break;
+      case "Menu":
+        Utils.EventAsync(new SceneChangingTo("Menu"));
+        SceneManager.LoadScene("Menu");
+        break;
+    }
   }
 
   public override void RegisterEvents()
@@ -69,15 +110,44 @@ public class UIController : AbstractController
     EventManager.Instance.AddListener<PlayerTurnChangedTo>(onPlayerTurnChanged);
     EventManager.Instance.AddListener<UserUsedSelectedPower>(onUserUsedSelectedPower);
     EventManager.Instance.AddListener<GameOverEvent>(onGameOverEvent);
+    EventManager.Instance.AddListener<OpponentDisconnected>(onOpponentDisconnected);
+    EventManager.Instance.AddListener<OutOfTime>(onOutOfTime);
 
+    disConnectedCloseButton.onClick.AddListener(() => onClick(disConnectedCloseButton.name));
+    MenuButton.onClick.AddListener(() => onClick(MenuButton.name));
+    GameManager.Instance.incrementPlayer1Timer += OnIncrementTimer;
+    GameManager.Instance.incrementPlayer2Timer += OnIncrementTimer;
   }
+
+
   public override void UnRegisterEvents()
   {
     EventManager.Instance.RemoveListener<UserAquiredPower>(onUserGotNewPower);
     EventManager.Instance.RemoveListener<PlayerTurnChangedTo>(onPlayerTurnChanged);
     EventManager.Instance.RemoveListener<UserUsedSelectedPower>(onUserUsedSelectedPower);
     EventManager.Instance.RemoveListener<GameOverEvent>(onGameOverEvent);
+    EventManager.Instance.RemoveListener<OpponentDisconnected>(onOpponentDisconnected);
+    EventManager.Instance.RemoveListener<OutOfTime>(onOutOfTime);
+    disConnectedCloseButton.onClick.RemoveAllListeners();
+    MenuButton.onClick.RemoveAllListeners();
+    GameManager.Instance.incrementPlayer1Timer -= OnIncrementTimer;
+    GameManager.Instance.incrementPlayer2Timer -= OnIncrementTimer;
   }
+
+  private void onOutOfTime(OutOfTime e)
+  {
+    interuptionText.text = "Time Out";
+    onCLoseClicked = e.onClose;
+    disConnected.SetActive(true);
+  }
+
+  private void onOpponentDisconnected(OpponentDisconnected e)
+  {
+    interuptionText.text = "Opponent Disconnected";
+    onCLoseClicked = e.onClose;
+    disConnected.SetActive(true);
+  }
+
   private void onGameOverEvent(GameOverEvent e)
   {
     gameOver.SetActive(true);
@@ -158,8 +228,8 @@ public class UIController : AbstractController
     //Instantiate()
   }
 
-  private void onChangePowerToggle(PowerToggleWidget powerToggle, bool isOn)
+  private void onChangePowerToggle(PowerToggleWidget powerToggle, bool isOn, PlayerType playerType)
   {
-    Utils.EventAsync(new Events.UserSelectedPower(powerToggle.powerType, isOn));
+    Utils.EventAsync(new Events.UserSelectedPower(powerToggle.powerType, isOn, playerType));
   }
 }

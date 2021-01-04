@@ -1,8 +1,11 @@
 ﻿using Events;
+using Firebase.Database;
 using System;
 using System.Collections;
 using System.Collections.Generic;
+using TMPro;
 using UnityEngine;
+using UnityEngine.UI;
 
 public class GameManager : MonoBehaviour
 {
@@ -29,7 +32,29 @@ public class GameManager : MonoBehaviour
   Dictionary<PowerType, int> player1AquiredPowersAndCount;
   Dictionary<PowerType, int> player2AquiredPowersAndCount;
 
-  private Vector2Int mapSize;
+  public Vector2Int mapSize;
+
+  public int seed = 2;
+  //public bool shouldGenerateRandomSeed = false;
+
+  public int powerSeed = 0;
+  [HideInInspector]
+  public string gameId;
+
+  DatabaseReference reference;
+  public DataSnapshot dataSnapshotOfMatchMakingData;
+  public GameModes CurrentGameMode = GameModes.Offline;
+
+  public int cameraInitialYValue = 6;
+
+  public delegate void timerIncrementEventHandler(int remainingSeconds);
+  public event timerIncrementEventHandler incrementPlayer1Timer;
+  public event timerIncrementEventHandler incrementPlayer2Timer;
+
+  public TextMeshProUGUI Player1UserName;
+  public TextMeshProUGUI Player2UserName;
+  public TextMeshProUGUI Player1Rank;
+  public TextMeshProUGUI Player2Rank;
 
   public static GameManager Instance
   {
@@ -44,16 +69,229 @@ public class GameManager : MonoBehaviour
   //    return mapGenerator.mapSize;
   //  }
   //}
-  private void Awake()
+  int timer = 0;
+  PlayerType myPlayerType = PlayerType.P1;
+  void Start()
   {
     if (Instance == null)
     {
       Instance = this;
     }
-    Initialize();
+    timer = maxTimeForTurn;
+    CurrentGameMode = (GameModes)PlayerPrefs.GetInt("GameMode");
+    if (CurrentGameMode == GameModes.Offline)
+    {
+      int mapSizeTemp = PlayerPrefs.GetInt("Settings_MapSize", 6);
+
+      mapSize.x = mapSize.y = mapSizeTemp;
+
+      int mapNumberTemp = PlayerPrefs.GetInt("Settings_MapNumber", -1);
+
+      random = new System.Random();
+      if (mapNumberTemp == -1)
+      {
+        seed = random.Next(0, 1000);
+      }
+      else
+      {
+        seed = mapNumberTemp;
+      }
+
+      //if (shouldGenerateRandomSeed)
+      //{
+      //}
+      powerSeed = random.Next(0, 1000);
+      Initialize();
+    }
+    else
+    {
+      string gameId = PlayerPrefs.GetString("gameId");
+      reference = FirebaseDatabase.DefaultInstance.GetReference("games/" + gameId);
+      reference.GetValueAsync().ContinueWith(task =>
+      {
+        if (task.IsFaulted)
+        {
+          // Handle the error...
+        }
+        else if (task.IsCompleted)
+        {
+          dataSnapshotOfMatchMakingData = task.Result;
+          seed = int.Parse(dataSnapshotOfMatchMakingData.Child("seed").Value.ToString());
+          powerSeed = int.Parse(dataSnapshotOfMatchMakingData.Child("pSeed").Value.ToString());
+          mapSize = new Vector2Int(6, 6);
+
+          if (UserData.user.UserId == dataSnapshotOfMatchMakingData.Child("player1Id").Value.ToString())
+          {
+            myPlayerType = PlayerType.P1;
+            opponentId = dataSnapshotOfMatchMakingData.Child("player2Id").Value.ToString();
+            //Player1UserName.text = UserData.user.DisplayName;
+            //int[] matchesInfo = UserData.ParseMatchesInfo();
+            //Player1Rank.text = matchesInfo[2].ToString();
+          }
+          else
+          {
+            myPlayerType = PlayerType.P2;
+            opponentId = dataSnapshotOfMatchMakingData.Child("player1Id").Value.ToString();
+            //Player2UserName.text = UserData.user.DisplayName;
+            //int[] matchesInfo = UserData.ParseMatchesInfo();
+            //Player2Rank.text = matchesInfo[2].ToString();
+          }
+
+          getOpponentUserData();
+
+        }
+      });
+    }
+
+  }
+  bool shouldInitialize = false;
+  public int maxTimeForTurn = 30;
+  IEnumerator incrementPlayer1Coroutine;
+  IEnumerator incrementPlayer2Coroutine;
+  string opponentId = "";
+  private void Update()
+  {
+    if (shouldInitialize)
+    {
+      shouldInitialize = false;
+      Initialize();
+
+      if (CurrentGameMode == GameModes.Online)
+      {
+        if (myPlayerType == PlayerType.P1)
+        {
+          Player1UserName.text = "Name : " + UserData.user.DisplayName;
+          int[] matchesInfo = UserData.ParseMatchesInfo();
+          Player1Rank.text = "Rank : " + matchesInfo[2].ToString();
+
+          Player2UserName.text = "Name : " + OpponentData.user.DisplayName;
+          int[] opponentMatchesInfo = OpponentData.ParseMatchesInfo();
+          Player2Rank.text = "Rank : " + opponentMatchesInfo[2].ToString();
+        }
+        else
+        {
+          Player2UserName.text = "Name : " + UserData.user.DisplayName;
+          int[] matchesInfo = UserData.ParseMatchesInfo();
+          Player2Rank.text = "Rank : " + matchesInfo[2].ToString();
+
+          Player1UserName.text = "Name : " + OpponentData.user.DisplayName;
+          int[] opponentMatchesInfo = OpponentData.ParseMatchesInfo();
+          Player1Rank.text = "Rank : " + opponentMatchesInfo[2].ToString();
+        }
+
+        incrementPlayer1Coroutine = IncrementTimer(PlayerType.P1);
+        incrementPlayer2Coroutine = IncrementTimer(PlayerType.P2);
+        StopCoroutine(incrementPlayer1Coroutine);
+        StopCoroutine(incrementPlayer2Coroutine);
+        timer = maxTimeForTurn;
+        StartCoroutine(incrementPlayer1Coroutine);
+      }
+
+
+
+
+
+    }
+
+
+    //#region CameraResize
+    //int width = Screen.width;
+    //int height = Screen.height;
+    //float screenRatio = Camera.main.aspect;
+    //float bestRatio = 0.56f;
+
+    //float cameraYValue = cameraInitialYValue;
+
+    //if (screenRatio <= bestRatio)
+    //{
+    //  cameraYValue += (1f - screenRatio / bestRatio) / 2f;
+    //}
+    //else
+    //{
+    //  cameraYValue += (1f - bestRatio / screenRatio) / 2f;
+    //}
+    //cameraYValue = cameraYValue + (mapSize.x * 4);
+
+
+    //Camera.main.transform.position = new Vector3(Camera.main.transform.position.x, cameraYValue, Camera.main.transform.position.z);
+    //#endregion
+  }
+  DatabaseReference referenceOfOpponentData;
+
+  private void getOpponentUserData()
+  {
+    referenceOfOpponentData = FirebaseDatabase.DefaultInstance.RootReference;
+    referenceOfOpponentData = FirebaseDatabase.DefaultInstance.GetReference("Users");
+    referenceOfOpponentData.Child(opponentId).GetValueAsync().ContinueWith(task =>
+    {
+      if (task.IsFaulted)
+      {
+        // Handle the error...
+      }
+      else if (task.IsCompleted)
+      {
+        DataSnapshot UserDataSnapshot = task.Result;
+        OpponentData.currentState = State.Open;
+
+        if (UserDataSnapshot.Value == null)
+        {
+        }
+        else
+        {
+          OpponentData.matchesInfo = UserDataSnapshot.Child("MatchesInfo").Value.ToString();
+          OpponentData.user = new DummyFirebaseUser(opponentId, UserDataSnapshot.Child("uname").Value.ToString());
+        }
+
+        shouldInitialize = true;
+
+        //userCreated.Invoke();
+      }
+    });
   }
 
-  private void Initialize()
+
+  private IEnumerator IncrementTimer(PlayerType playerType)
+  {
+    while (true)
+    {
+      yield return new WaitForSeconds(1f);
+      UpdateTimer(playerType);
+    }
+  }
+
+  private void UpdateTimer(PlayerType playerType)
+  {
+    if (timer <= 0)
+    {
+      Utils.EventAsync(new Events.OutOfTime(onClickedOutOfTimeClose));
+    }
+    timer--;
+    if (playerType == PlayerType.P1)
+      incrementPlayer1Timer?.Invoke(timer);
+    else
+      incrementPlayer2Timer?.Invoke(timer);
+
+  }
+
+  private void onClickedOutOfTimeClose()
+  {
+    if (currentPlayerTurn == PlayerType.P1)
+      Utils.EventAsync(new Events.GameOverEvent(PlayerType.P2));
+    else
+      Utils.EventAsync(new Events.GameOverEvent(PlayerType.P1));
+  }
+
+  void Initialize()
+  {
+    foreach (IController controller in controllers)
+    {
+      controller.Initialize();
+      controller.RegisterEvents();
+    }
+    playGameInitialize();
+  }
+
+  public void playGameInitialize()
   {
     player1ActiveGenerators = new Dictionary<GameObject, Vector2Int>();
     player2ActiveGenerators = new Dictionary<GameObject, Vector2Int>();
@@ -61,30 +299,82 @@ public class GameManager : MonoBehaviour
     player1AquiredPowersAndCount = new Dictionary<PowerType, int>();
     player2AquiredPowersAndCount = new Dictionary<PowerType, int>();
 
-    foreach (IController controller in controllers)
-    {
-      controller.Initialize();
-      controller.RegisterEvents();
-    }
-    //mapGenerator.Initialize();
-    //tiles = mapGenerator.GenerateMap();
-    //player.Initialize();
+    #region TestingValues
+    seed = 2;
+    powerSeed = 604;
+    #endregion
 
-    Utils.EventAsync(new Events.GenerateMapEvent(onGetGeneratedTiles));
+    #region CameraResize
+    int width = Screen.width;
+    int height = Screen.height;
+    float screenRatio = Camera.main.aspect;
+    float bestRatio = 0.56f;
+
+    float cameraYValue = cameraInitialYValue;
+
+    if (screenRatio <= bestRatio)
+    {
+      Debug.Log("Before " + cameraYValue);
+      float temp = (1f - screenRatio / bestRatio) * 40f;
+      cameraYValue += temp;
+      Debug.Log("After " + cameraYValue);
+
+    }
+    else
+    {
+      cameraYValue += (1f - bestRatio / screenRatio);
+    }
+    cameraYValue = cameraYValue + (mapSize.x * 4);
+
+
+    Camera.main.transform.position = new Vector3(Camera.main.transform.position.x, cameraYValue, Camera.main.transform.position.z);
+    #endregion
+
+    Utils.EventAsync(new Events.GenerateMapEvent(mapSize, seed, powerSeed, onGetGeneratedTiles));
     Utils.EventAsync(new Events.GetMapSize(onGetMapSize));
 
     RegisterEvents();
-
+    if (player1AquiredPowersAndCount.ContainsKey(PowerType.Spawner))
+    {
+      player1AquiredPowersAndCount[PowerType.Spawner] = 1;
+    }
+    else
+    {
+      player1AquiredPowersAndCount.Add(PowerType.Spawner, 1);
+    }
+    if (player1AquiredPowersAndCount.ContainsKey(PowerType.Spawner))
+    {
+      player2AquiredPowersAndCount[PowerType.Spawner] = 1;
+    }
+    else
+    {
+      player2AquiredPowersAndCount.Add(PowerType.Spawner, 1);
+    }
     Utils.EventAsync(new Events.UserAquiredPower(PlayerType.P1, PowerType.Spawner, 1));
     Utils.EventAsync(new Events.UserAquiredPower(PlayerType.P2, PowerType.Spawner, 1));
-
   }
 
   private void RegisterEvents()
   {
+    EventManager.Instance.RemoveListener<SceneChangingTo>(onSceneChangingTo);
+
     EventManager.Instance.AddListener<PlayerTurnChangedTo>(playerTurnChanged);
     EventManager.Instance.AddListener<UserUsedSelectedPower>(onUserUsedSelectedPower);
-
+    EventManager.Instance.AddListener<SceneChangingTo>(onSceneChangingTo);
+  }
+  private void UnregisterEvents()
+  {
+    EventManager.Instance.RemoveListener<PlayerTurnChangedTo>(playerTurnChanged);
+    EventManager.Instance.RemoveListener<UserUsedSelectedPower>(onUserUsedSelectedPower);
+    //EventManager.Instance.RemoveListener<SceneChangingTo>(onSceneChangingTo);
+  }
+  private void onSceneChangingTo(SceneChangingTo e)
+  {
+    UnregisterEvents();
+    foreach (IController controller in controllers)
+    {
+      controller.UnRegisterEvents();
+    }
   }
 
   private void onUserUsedSelectedPower(UserUsedSelectedPower e)
@@ -104,7 +394,6 @@ public class GameManager : MonoBehaviour
       }
     }
   }
-
   private void onGetMapSize(Vector2Int obj)
   {
     mapSize = obj;
@@ -149,7 +438,7 @@ public class GameManager : MonoBehaviour
   }
   public void Swipe(SwipeDirection swipeDirection, PlayerType turn)
   {
-    Debug.Log("Button Down Pressed");
+    //Debug.Log("Button Down Pressed");
 
     PlayerSymbol currentPlayerSymbol;
     Vector2Int currentPosition;
@@ -281,9 +570,26 @@ public class GameManager : MonoBehaviour
       setPlayersCommonFunctionality(currentPosition, NextTilePosition, turn);
     }
   }
-
+  PlayerType currentPlayerTurn = PlayerType.P1;
   private void playerTurnChanged(PlayerTurnChangedTo playerTurnChanged)
   {
+    currentPlayerTurn = playerTurnChanged.playerType;
+    if (CurrentGameMode == GameModes.Online)
+    {
+      timer = maxTimeForTurn;
+      if (playerTurnChanged.playerType == PlayerType.P1)
+      {
+        StopCoroutine(incrementPlayer2Coroutine);
+        StartCoroutine(incrementPlayer1Coroutine);
+      }
+      else
+      {
+        StopCoroutine(incrementPlayer1Coroutine);
+        StartCoroutine(incrementPlayer2Coroutine);
+      }
+    }
+
+
     foreach (Tile tempTile in tiles)
     {
       if (tempTile.tileType == PlayerSymbol.Walkable)
@@ -337,9 +643,9 @@ public class GameManager : MonoBehaviour
         player1ActiveGenerators.Remove(seletedPipesGenerator);
         Destroy(seletedPipesGenerator);
         int remainingSpawners = 0;
-        if (player2AquiredPowersAndCount.ContainsKey(PowerType.Spawner))
+        if (player1AquiredPowersAndCount.ContainsKey(PowerType.Spawner))
         {
-          remainingSpawners = player2AquiredPowersAndCount[PowerType.Spawner];
+          remainingSpawners = player1AquiredPowersAndCount[PowerType.Spawner];
         }
         if (player1ActiveGenerators.Count <= 0 && remainingSpawners <= 0)
         {

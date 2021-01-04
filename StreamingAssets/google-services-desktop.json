@@ -1,0 +1,40 @@
+{
+  "project_info": {
+    "project_number": "975225598109",
+    "firebase_url": "https://pipes-ca9d5-default-rtdb.firebaseio.com",
+    "project_id": "pipes-ca9d5",
+    "storage_bucket": "pipes-ca9d5.appspot.com"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:975225598109:android:b5b93e1a8afb02fb1b6474",
+        "android_client_info": {
+          "package_name": "com.Rakesh_Bogaram.Pipes"
+        }
+      },
+      "oauth_client": [
+        {
+          "client_id": "975225598109-jr85hmls0p9d5s140r2ilrdt2krj4b44.apps.googleusercontent.com",
+          "client_type": 3
+        }
+      ],
+      "api_key": [
+        {
+          "current_key": "AIzaSyBiHr2EtQn-0vfhrx59Np2S4O9eMoA_31A"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": [
+            {
+              "client_id": "975225598109-jr85hmls0p9d5s140r2ilrdt2krj4b44.apps.googleusercontent.com",
+              "client_type": 3
+            }
+          ]
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}

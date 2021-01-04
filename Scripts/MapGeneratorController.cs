@@ -6,38 +6,36 @@ using UnityEngine;
 
 public class MapGeneratorController : AbstractController
 {
-  public Vector2Int mapSize;
+  private Vector2Int mapSize;
   public Tile tilePrefab;
   public GameObject startingPipeP1;
   public GameObject startingPipeP2;
   public Transform startingPipesParent;
-  public int seed = 2;
-  public bool shouldGenerateRandomSeed = false;
+  public Transform walkablesParent;
+  private int mapSeed;
+  private int powerSeed;
+
   private int tileGap = 2;
   private Vector3 startingTileOffset;
 
   private Tile[,] tiles;
-  private System.Random random;
 
   public override void Initialize()
   {
-    random = new System.Random();
-    if (shouldGenerateRandomSeed)
-    {
-      seed = random.Next(0, 1000);
-    }
-    tiles = new Tile[mapSize.x, mapSize.y];
   }
 
   public override void RegisterEvents()
   {
     EventManager.Instance.AddListener<GenerateMapEvent>(onGetGenerateMapEvent);
     EventManager.Instance.AddListener<GetMapSize>(onGetMapSize);
+    EventManager.Instance.AddListener<GetStartingPipeGameObject>(onGetStartingPipeGameObject);
   }
+
+
   public override void UnRegisterEvents()
   {
     EventManager.Instance.RemoveListener<GenerateMapEvent>(onGetGenerateMapEvent);
-    EventManager.Instance.RemoveListener<GetMapSize>(onGetMapSize);
+    EventManager.Instance.RemoveListener<GetStartingPipeGameObject>(onGetStartingPipeGameObject);
   }
 
   private void onGetMapSize(GetMapSize e)
@@ -45,6 +43,13 @@ public class MapGeneratorController : AbstractController
     e.getMapSize(mapSize);
   }
 
+  private void onGetStartingPipeGameObject(GetStartingPipeGameObject e)
+  {
+    if (startingPipesDict.ContainsKey(e.ID))
+    {
+      e.action(startingPipesDict[e.ID]);
+    }
+  }
   //public Tile[,] GenerateMap()
   //{
 
@@ -52,12 +57,20 @@ public class MapGeneratorController : AbstractController
 
   private void onGetGenerateMapEvent(GenerateMapEvent e)
   {
+    mapSize = e.mapSize;
+    mapSeed = e.seed;
+    powerSeed = e.powerSeed;
+    Debug.Log("Seeed map " + mapSeed + " power " + powerSeed);
+    tiles = new Tile[mapSize.x, mapSize.y];
     GenerateStartingPipes();
     e.generatedTiles(createTiles());
   }
 
+  Dictionary<int, GameObject> startingPipesDict = new Dictionary<int, GameObject>();
+
   private void GenerateStartingPipes()
   {
+    startingPipesDict = new Dictionary<int, GameObject>();
     int noOfIterations = mapSize.x * 4 + 4;
     int tempRotateNumber = 0;
     startingTileOffset = new Vector3(1, 0, 1);
@@ -81,6 +94,9 @@ public class MapGeneratorController : AbstractController
         {
           startingPipePrefab = Instantiate(startingPipeP1, new Vector3(0, 0, 0), Quaternion.identity);
         }
+        startingPipesDict.Add(x, startingPipePrefab);
+        startingPipePrefab.transform.GetComponent<StartingPipes>().id = x;
+
         startingPipePrefab.transform.parent = startingPipesParent;
         int tempRotate2 = 0;
         for (int y = 0; y < tempRotateNumber; y++)
@@ -102,7 +118,7 @@ public class MapGeneratorController : AbstractController
           }
         }
         //startingPipePrefab.transform.GetComponent<StartingPipes>().GetFrontTileIndex = ;
-        Debug.Log("noOfNonSkippedIterations " + tempRotateNumber);
+        //Debug.Log("noOfNonSkippedIterations " + tempRotateNumber);
         if (tempRotateNumber == 1)
         {
           startingPipePrefab.transform.GetComponent<StartingPipes>().GetFrontTileIndex = new Vector2Int(0, noOfNonSkippedIterations);
@@ -125,19 +141,22 @@ public class MapGeneratorController : AbstractController
       }
     }
     startingPipesParent.transform.position = startingPipesParent.transform.position - startingTileOffset;
+    float half = mapSize.x - 1;
+    startingPipesParent.transform.position = new Vector3(startingPipesParent.position.x - half, startingPipesParent.position.y, startingPipesParent.position.z-half);
   }
 
   private Tile[,] createTiles()
   {
-    generateFishersRandomArray(seed);
+    generateFishersRandomArray(mapSeed);
     for (int x = 0; x < mapSize.x; x++)
     {
       for (int y = 0; y < mapSize.y; y++)
       {
         PlayerSymbol type = playerSymbolsGeneratedBlockets[x, y];//GetRandomTileType();
         Tile tempTile = Instantiate(tilePrefab, new Vector3(x * 2, 0f, y * 2), Quaternion.identity);
+        tempTile.gameObject.transform.parent = walkablesParent;
         //tempTile.transform.parent = this.transform;
-        tempTile.setInitialData(type, new Vector2Int(x, y));
+        tempTile.setInitialData(type, playerSymbolsGeneratedBlocketsPowers[x, y], new Vector2Int(x, y));
         if (x == 0)
         {
           tempTile.isTilePlayer2EndGoal = true;
@@ -149,20 +168,22 @@ public class MapGeneratorController : AbstractController
         tiles[x, y] = tempTile;
       }
     }
+    float half = mapSize.x - 1;
+    walkablesParent.position = new Vector3(walkablesParent.position.x- half, walkablesParent.position.y, walkablesParent.position.z- half);
     return tiles;
   }
 
-  private PlayerSymbol GetRandomTileType()
-  {
-    if (random.Next(0, 10) > 7)
-    {
-      return PlayerSymbol.Blocker;
-    }
-    else
-      return PlayerSymbol.Walkable;
-  }
+  //private PlayerSymbol GetRandomTileType()
+  //{
+  //  if (random.Next(0, 10) > 7)
+  //  { 
+  //    return PlayerSymbol.Blocker;
+  //  }
+  //  else
+  //    return PlayerSymbol.Walkable;
+  //}
   PlayerSymbol[,] playerSymbolsGeneratedBlockets;
-
+  PowerType[,] playerSymbolsGeneratedBlocketsPowers;
   private void generateFishersRandomArray(int seed)
   {
     int[] playerSymbolsBlockers = new int[mapSize.x];
@@ -176,6 +197,26 @@ public class MapGeneratorController : AbstractController
     {
       playerSymbolsGeneratedBlockets[i, playerSymbolsBlockers[i]] = PlayerSymbol.Blocker;
     }
+
+
+    int enumLength = Enum.GetNames(typeof(PowerType)).Length;
+    PowerType[] powerTypes = new PowerType[mapSize.x];
+    for (int l = 0; l < mapSize.x; l++)
+    {
+      int remainder = l % (enumLength - 1);// because of none
+      //int storeValue = l / divider;
+      powerTypes[l] = (PowerType)(Enum.GetValues(typeof(PowerType))).GetValue(remainder + 1);
+    }
+    powerTypes = RanNum.RanNumGenerator(powerTypes, powerSeed, mapSize.x);
+
+
+    playerSymbolsGeneratedBlocketsPowers = new PowerType[mapSize.x, mapSize.y];
+    for (int i = 0; i < mapSize.x; i++)
+    {
+      playerSymbolsGeneratedBlocketsPowers[i, playerSymbolsBlockers[i]] = powerTypes[i];
+      Debug.LogWarning("Powers i " + i + " j " + playerSymbolsBlockers[i] + " Power " + powerTypes[i]);
+    }
+
   }
 
 
