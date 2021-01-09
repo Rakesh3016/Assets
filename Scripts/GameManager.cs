@@ -500,14 +500,13 @@ public class GameManager : MonoBehaviour
     {
       if (turn == PlayerType.P1)
       {
+        //tiles[NextTilePosition.x, NextTilePosition.y].setPlayer1Data();
         setPlayersCommonFunctionality(currentPosition, NextTilePosition, turn);
-        tiles[NextTilePosition.x, NextTilePosition.y].setPlayer1Data();
       }
       else
       {
+        //tiles[NextTilePosition.x, NextTilePosition.y].setPlayer2Data();
         setPlayersCommonFunctionality(currentPosition, NextTilePosition, turn);
-
-        tiles[NextTilePosition.x, NextTilePosition.y].setPlayer2Data();
       }
     }
     else if (tiles[NextTilePosition.x, NextTilePosition.y].tileType == PlayerSymbol.Blocker)
@@ -528,7 +527,7 @@ public class GameManager : MonoBehaviour
         }
         Utils.EventAsync(new Events.UserAquiredPower(turn, tiles[NextTilePosition.x, NextTilePosition.y].powerType, player1AquiredPowersAndCount[tiles[NextTilePosition.x, NextTilePosition.y].powerType]));
 
-        tiles[NextTilePosition.x, NextTilePosition.y].setPlayer1Data();
+       // tiles[NextTilePosition.x, NextTilePosition.y].setPlayer1Data();
       }
       else
       {
@@ -546,7 +545,7 @@ public class GameManager : MonoBehaviour
         }
         Utils.EventAsync(new Events.UserAquiredPower(turn, tiles[NextTilePosition.x, NextTilePosition.y].powerType, player2AquiredPowersAndCount[tiles[NextTilePosition.x, NextTilePosition.y].powerType]));
 
-        tiles[NextTilePosition.x, NextTilePosition.y].setPlayer2Data();
+       // tiles[NextTilePosition.x, NextTilePosition.y].setPlayer2Data();
       }
       tiles[NextTilePosition.x, NextTilePosition.y].powerType = PowerType.None;
       setPlayersCommonFunctionality(currentPosition, NextTilePosition, turn);
@@ -555,21 +554,101 @@ public class GameManager : MonoBehaviour
     {
       DestroyIfTheTileHasOppositePlayer(turn, NextTilePosition);
       //tiles[NextTilePosition.x, NextTilePosition.y].setWalkableData();
+      //if (turn == PlayerType.P1)
+      //{
+      //  tiles[NextTilePosition.x, NextTilePosition.y].setPlayer1Data();
+      //}
+      //else
+      //{
+      //  tiles[NextTilePosition.x, NextTilePosition.y].setPlayer2Data();
+      //}
       setPlayersCommonFunctionality(currentPosition, NextTilePosition, turn);
-      if (turn == PlayerType.P1)
-      {
-        tiles[NextTilePosition.x, NextTilePosition.y].setPlayer1Data();
-      }
-      else
-      {
-        tiles[NextTilePosition.x, NextTilePosition.y].setPlayer2Data();
-      }
+
     }
     else if (tiles[NextTilePosition.x, NextTilePosition.y].tileType == currentPlayerSymbol)
     {
       setPlayersCommonFunctionality(currentPosition, NextTilePosition, turn);
     }
   }
+  public void setPlayersCommonFunctionality(Vector2Int currentPosition, Vector2Int NextTilePosition, PlayerType turn)
+  {
+    if (turn == PlayerType.P1)
+    {
+      tiles[NextTilePosition.x, NextTilePosition.y].setPlayer1Data();
+    }
+    else
+    {
+      tiles[NextTilePosition.x, NextTilePosition.y].setPlayer2Data();
+    }
+    tiles[NextTilePosition.x, NextTilePosition.y].SetAppropriatePipeGenerator();
+    Vector2Int NextTilePositionTemp = Virus.Utils.GetNextTile(new Vector2Int(NextTilePosition.x, NextTilePosition.y), SwipeDirection.Down, mapSize.x);
+    if (NextTilePositionTemp.x != -1 || NextTilePositionTemp.y != -1)
+    {
+      tiles[NextTilePositionTemp.x, NextTilePositionTemp.y].SetAppropriatePipeGenerator();
+    }
+    NextTilePositionTemp = Virus.Utils.GetNextTile(new Vector2Int(NextTilePosition.x, NextTilePosition.y), SwipeDirection.Up, mapSize.x);
+    if (NextTilePositionTemp.x != -1 || NextTilePositionTemp.y != -1)
+    {
+      tiles[NextTilePositionTemp.x, NextTilePositionTemp.y].SetAppropriatePipeGenerator();
+    }
+    NextTilePositionTemp = Virus.Utils.GetNextTile(new Vector2Int(NextTilePosition.x, NextTilePosition.y), SwipeDirection.Left, mapSize.x);
+    if (NextTilePositionTemp.x != -1 || NextTilePositionTemp.y != -1)
+    {
+      tiles[NextTilePositionTemp.x, NextTilePositionTemp.y].SetAppropriatePipeGenerator();
+    }
+    NextTilePositionTemp = Virus.Utils.GetNextTile(new Vector2Int(NextTilePosition.x, NextTilePosition.y), SwipeDirection.Right, mapSize.x);
+    if (NextTilePositionTemp.x != -1 || NextTilePositionTemp.y != -1)
+    {
+      tiles[NextTilePositionTemp.x, NextTilePositionTemp.y].SetAppropriatePipeGenerator();
+    }
+
+
+    if (turn == PlayerType.P1)
+    {
+      //WhereIamGoing->Back->Front->Left->Right
+
+
+      GameObject seletedPipesGenerator = null;
+      foreach (KeyValuePair<GameObject, Vector2Int> b in player1ActiveGenerators)
+      {
+        if (b.Value == currentPosition)
+        {
+          seletedPipesGenerator = b.Key;
+          break;
+        }
+      }
+      if (seletedPipesGenerator != null)
+      {
+
+        Player player = seletedPipesGenerator.GetComponent<Player>();
+        player.MoveTowards(new Vector3(tiles[NextTilePosition.x, NextTilePosition.y].transform.position.x, player.transform.position.y, tiles[NextTilePosition.x, NextTilePosition.y].transform.position.z));
+        player1ActiveGenerators[seletedPipesGenerator] = NextTilePosition;
+      }
+      player1SelectedTile = NextTilePosition;
+    }
+    else
+    {
+      GameObject seletedPipesGenerator = null;
+      foreach (KeyValuePair<GameObject, Vector2Int> b in player2ActiveGenerators)
+      {
+        if (b.Value == currentPosition)
+        {
+          seletedPipesGenerator = b.Key;
+          break;
+        }
+      }
+      if (seletedPipesGenerator != null)
+      {
+
+        Player player = seletedPipesGenerator.GetComponent<Player>();
+        player.MoveTowards(new Vector3(tiles[NextTilePosition.x, NextTilePosition.y].transform.position.x, player.transform.position.y, tiles[NextTilePosition.x, NextTilePosition.y].transform.position.z));
+        player2ActiveGenerators[seletedPipesGenerator] = NextTilePosition;
+      }
+      //tiles[NextTilePosition.x, NextTilePosition.y].setPlayer2Data();
+      player2SelectedTile = NextTilePosition;
+    }
+  }
+
   PlayerType currentPlayerTurn = PlayerType.P1;
   private void playerTurnChanged(PlayerTurnChangedTo playerTurnChanged)
   {
@@ -655,50 +734,6 @@ public class GameManager : MonoBehaviour
     }
   }
 
-  public void setPlayersCommonFunctionality(Vector2Int currentPosition, Vector2Int NextTilePosition, PlayerType turn)
-  {
-    if (turn == PlayerType.P1)
-    {
-      GameObject seletedPipesGenerator = null;
-      foreach (KeyValuePair<GameObject, Vector2Int> b in player1ActiveGenerators)
-      {
-        if (b.Value == currentPosition)
-        {
-          seletedPipesGenerator = b.Key;
-          break;
-        }
-      }
-      if (seletedPipesGenerator != null)
-      {
-
-        Player player = seletedPipesGenerator.GetComponent<Player>();
-        player.MoveTowards(new Vector3(tiles[NextTilePosition.x, NextTilePosition.y].transform.position.x, player.transform.position.y, tiles[NextTilePosition.x, NextTilePosition.y].transform.position.z));
-        player1ActiveGenerators[seletedPipesGenerator] = NextTilePosition;
-      }
-      player1SelectedTile = NextTilePosition;
-    }
-    else
-    {
-      GameObject seletedPipesGenerator = null;
-      foreach (KeyValuePair<GameObject, Vector2Int> b in player2ActiveGenerators)
-      {
-        if (b.Value == currentPosition)
-        {
-          seletedPipesGenerator = b.Key;
-          break;
-        }
-      }
-      if (seletedPipesGenerator != null)
-      {
-
-        Player player = seletedPipesGenerator.GetComponent<Player>();
-        player.MoveTowards(new Vector3(tiles[NextTilePosition.x, NextTilePosition.y].transform.position.x, player.transform.position.y, tiles[NextTilePosition.x, NextTilePosition.y].transform.position.z));
-        player2ActiveGenerators[seletedPipesGenerator] = NextTilePosition;
-      }
-      tiles[NextTilePosition.x, NextTilePosition.y].setPlayer2Data();
-      player2SelectedTile = NextTilePosition;
-    }
-  }
 
   System.Random random = new System.Random();
   public int GetRandomNumber(int min, int max)
